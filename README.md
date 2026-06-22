@@ -182,64 +182,31 @@ http://172.26.19.66:5000
 
 # 📸 System Demo
 
-## 🔐 Login Page
+## 👨‍🏫 Admin
 
-Replace with your screenshot:
-
-```md
-<img width="372" height="225" alt="image" src="https://github.com/user-attachments/assets/07e00fd8-6c8f-4924-a45d-86df83867b53" />
-
-```
-
+<p align="center">
+  <img src="static/images/admin.png" width="25%">
+  <img src="static/images/admin1.png" width="25%">
+  <img src="static/images/admin2.png" width="25%">
+  <img src="static/images/admin3.png" width="25%">
+</p>
 ---
 
-## 🖥️ Teacher Dashboard
+## 👨‍🏫 Teacher 
 
-Replace with your screenshot:
+<p align="center">
+  <img src="static/images/gv.png" width="30%">
+  <img src="static/images/gv1.png" width="30%">
+  <img src="static/images/gv2.png" width="30%">
+</p>
 
-```md
-![Dashboard](images/dashboard.png)
-```
+## 👨‍🎓 Student 
 
----
-
-## 👨‍🎓 Student Management
-
-Replace with your screenshot:
-
-```md
-![Students](images/students.png)
-```
-
----
-
-## 📚 Subject Management
-
-Replace with your screenshot:
-
-```md
-![Subjects](images/subjects.png)
-```
-
----
-
-## 📷 Attendance Page
-
-Replace with your screenshot:
-
-```md
-![Attendance](images/attendance.png)
-```
-
----
-
-## 📊 Attendance Statistics
-
-Replace with your screenshot:
-
-```md
-![Statistics](images/statistics.png)
-```
+<p align="center">
+  <img src="static/images/sv.png" width="30%">
+  <img src="static/images/sv1.png" width="30%">
+  <img src="static/images/sv2.png" width="30%">
+</p>
 
 ---
 
