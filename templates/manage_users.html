@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quản lý người dùng | Admin System</title>
+  
+  <!-- CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+  <style>
+    :root { 
+      --admin-indigo: #6366f1; 
+      --sidebar-bg: rgba(15, 23, 42, 0.95);
+    }
+    
+    body { 
+      margin: 0; 
+      font-family: 'Segoe UI', sans-serif; 
+      background: url("static/images/bg1.jpg") center/cover no-repeat fixed #f4f7fe; 
+      display: flex; 
+    }
+    
+    /* Sidebar */
+    .sidebar {
+      width: 260px;
+      background: var(--sidebar-bg);
+      backdrop-filter: blur(10px);
+      color: white;
+      display: flex; flex-direction: column;
+      padding: 1.5rem;
+      position: fixed; height: 100vh;
+      z-index: 1000;
+    }
+    
+     .sidebar-brand { font-size: 1.2rem; font-weight: 800; color: #818cf8; margin-bottom: 2rem; }
+    .nav-link {
+      color: #94a3b8; padding: 12px 15px; border-radius: 10px;
+      margin-bottom: 5px; transition: 0.3s; display: flex; align-items: center; text-decoration: none;
+    }
+    .nav-link i { margin-right: 12px; font-size: 1.1rem; }
+    .nav-link:hover, .nav-link.active { background: rgba(99, 102, 241, 0.2); color: white; }
+
+    /* ===================== MAIN ===================== */
+    .main-content { flex: 1; margin-left: 260px; padding: 2rem; }
+
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.3);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+      margin-bottom: 1.5rem;
+    }
+
+    /* Main Content */
+    .main-content { 
+      flex: 1; 
+      margin-left: 260px; 
+      padding: 2rem; 
+      min-height: 100vh; 
+    }
+
+    /* Glass Effect Cards */
+    .glass-card { 
+      background: rgba(255, 255, 255, 0.9); 
+      backdrop-filter: blur(10px); 
+      border-radius: 18px; 
+      border: 1px solid rgba(255, 255, 255, 0.3); 
+      padding: 1.5rem; 
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
+    }
+    
+    /* Custom Components */
+    .role-badge { 
+      padding: 5px 12px; 
+      border-radius: 20px; 
+      font-weight: 700; 
+      font-size: 0.7rem; 
+      text-transform: uppercase; 
+    }
+    
+    .bg-student { background: #dcfce7; color: #166534; }
+    .bg-teacher { background: #e0f2fe; color: #075985; }
+    .bg-admin { background: #fef2f2; color: #991b1b; }
+
+    .btn-indigo { background: var(--admin-indigo); color: white; border: none; }
+    .btn-indigo:hover { background: #4f46e5; color: white; }
+    
+    .search-box { border-radius: 50px; padding-left: 20px; }
+
+    /* Modal Fixes */
+    .modal-content {
+      border-radius: 20px;
+      border: none;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar shadow">
+  <div class="sidebar-brand"><i class="bi bi-shield-lock-fill"></i> ADMIN SYSTEM</div>
+  <nav class="nav flex-column">
+<small class="text-uppercase text-white fw-bold mb-2" style="font-size:0.7rem;">
+  Hệ thống
+</small>    <a href="/dashboard" class="nav-link"><i class="bi bi-speedometer2"></i> Tổng quan</a>
+    <small class="text-uppercase text-white fw-bold mb-2" style="font-size:0.7rem;">Quản lý dữ liệu</small>
+    <a href="/manage_users" class="nav-link active"><i class="bi bi-people"></i> Tài khoản</a>
+    <a href="/manage_teachers" class="nav-link"><i class="bi bi-person-badge"></i> Giáo viên</a>
+    <a href="/manage_subjects" class="nav-link"><i class="bi bi-book"></i> Môn học & Lịch</a>
+   <small class="text-uppercase text-white fw-bold mb-2" style="font-size:0.7rem;">Báo cáo</small>
+    <a href="/attendance_record" class="nav-link"><i class="bi bi-journal-check"></i> Nhật ký điểm danh</a>
+    <a href="/export_data" class="nav-link"><i class="bi bi-file-earmark-excel"></i> Xuất dữ liệu</a>
+  </nav>
+  <div class="mt-auto">
+    <a href="/logout" class="nav-link text-danger"><i class="bi bi-box-arrow-left"></i> Đăng xuất</a>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="main-content">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold text-white mb-0">Quản lý tài khoản</h3>
+    <!-- Nút thêm dùng data-bs-toggle vì không cần xử lý dữ liệu phức tạp trước khi hiện -->
+    <button class="btn btn-indigo rounded-pill px-4 shadow" data-bs-toggle="modal" data-bs-target="#addUserModal">
+      <i class="bi bi-plus-lg me-2"></i>Thêm người dùng
+    </button>
+  </div>
+
+  <!-- Search Area -->
+  <div class="glass-card mb-4 p-3">
+    <form action="/manage_users" method="GET" class="row g-2">
+      <div class="col-md-10">
+        <input type="text" name="search" class="form-control search-box" 
+               placeholder="Tìm kiếm theo Username, MSSV hoặc tên..." value="{{ search }}">
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-indigo w-100 rounded-pill">Tìm kiếm</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Table Area -->
+  <div class="glass-card">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead>
+          <tr>
+            <th width="5%">ID</th>
+            <th width="15%">Username</th>
+            <th width="10%">Vai trò</th>
+            <th width="30%">Họ và Tên</th>
+            <th width="15%">Trạng thái</th>
+            <th width="25%" class="text-end">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in users %}
+          <tr>
+            <td><span class="text-muted">#{{ user.id }}</span></td>
+            <td><strong class="text-dark">{{ user.username }}</strong></td>
+            <td><span class="role-badge bg-{{ user.role }}">{{ user.role }}</span></td>
+            <td>
+              {% if user.role == 'student' %}
+                <div class="fw-bold text-dark">{{ user.student_name or 'Chưa cập nhật' }}</div>
+                <small class="text-muted"><i class="bi bi-hash"></i> {{ user.student_code or 'N/A' }}</small>
+              {% elif user.role == 'teacher' %}
+                <div class="fw-bold text-primary">{{ user.teacher_name or 'Chưa cập nhật' }}</div>
+                <small class="text-muted"><i class="bi bi-person-workspace"></i> Giảng viên</small>
+              {% else %}
+                <span class="text-indigo small fw-bold">Quản trị viên</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if user.status == 1 %}
+                <span class="badge bg-success-subtle text-success border border-success">Hoạt động</span>
+              {% else %}
+                <span class="badge bg-danger-subtle text-danger border border-danger">Bị khóa</span>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              <!-- Nút sửa: KHÔNG dùng data-bs-toggle để tránh lỗi chồng backdrop -->
+              <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 btn-edit-user" 
+                      data-id="{{ user.id }}"
+                      data-username="{{ user.username }}"
+                      data-role="{{ user.role }}"
+                      data-fullname="{{ user.student_name if user.role == 'student' else user.teacher_name if user.role == 'teacher' else '' }}"
+                      data-status="{{ user.status }}"
+                      data-class="{{ user.class_name or '' }}"
+                      data-dept="{{ user.department or '' }}">
+                <i class="bi bi-pencil"></i> Sửa
+              </button>
+              <a href="/delete_user/{{ user.id }}" class="btn btn-sm btn-outline-danger rounded-pill px-3" 
+                 onclick="return confirm('Xác nhận xóa tài khoản?')">
+                <i class="bi bi-trash"></i>
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Thêm Người Dùng -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white border-0 py-3">
+        <h5 class="modal-title fw-bold">Tạo tài khoản mới</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form action="/add_user" method="POST">
+        <div class="modal-body p-4">
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Username</label>
+            <input type="text" name="username" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Mật khẩu</label>
+            <input type="password" name="password" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-bold">Vai trò</label>
+            <select name="role" class="form-select" onchange="toggleAddFields(this.value)">
+              <option value="student">Sinh viên</option>
+              <option value="teacher">Giảng viên</option>
+              <option value="admin">Quản trị viên</option>
+            </select>
+          </div>
+          <div id="add_field_student" class="mb-3">
+            <label class="form-label small fw-bold">Mã số sinh viên (MSSV)</label>
+            <input type="text" name="student_code" class="form-control">
+          </div>
+          <div id="add_field_teacher" class="mb-3" style="display:none;">
+            <label class="form-label small fw-bold">Họ tên giảng viên</label>
+            <input type="text" name="full_name" class="form-control">
+          </div>
+        </div>
+        <div class="modal-footer border-0 p-4 pt-0">
+          <button type="submit" class="btn btn-indigo w-100 py-2 fw-bold">XÁC NHẬN TẠO</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Sửa Người Dùng -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form action="/edit_user" method="POST">
+        <div class="modal-header border-0 p-4 pb-0">
+          <h5 class="modal-title fw-bold text-indigo"><i class="bi bi-pencil-square me-2"></i>Cập nhật thông tin</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4">
+          <input type="hidden" name="user_id" id="edit_user_id">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Username</label>
+              <input type="text" id="edit_username" class="form-control bg-light" readonly>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-bold">Trạng thái</label>
+              <select name="status" id="edit_status" class="form-select border-primary">
+                <option value="1">🟢 Hoạt động</option>
+                <option value="0">🔴 Khóa</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-bold">Họ và Tên đầy đủ</label>
+              <input type="text" name="full_name" id="edit_full_name" class="form-control" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-bold">Vai trò</label>
+              <input type="text" id="edit_role" class="form-control bg-light" readonly>
+              <input type="hidden" name="role" id="edit_role_hidden">
+            </div>
+            <div id="edit_div_student" class="col-12" style="display:none;">
+              <label class="form-label small fw-bold text-primary">Lớp sinh hoạt</label>
+              <input type="text" name="class_name" id="edit_class_name" class="form-control border-primary">
+            </div>
+            <div id="edit_div_teacher" class="col-12" style="display:none;">
+              <label class="form-label small fw-bold text-info">Khoa đào tạo</label>
+              <input type="text" name="department" id="edit_department" class="form-control border-info">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0 p-4 pt-0">
+          <button type="submit" class="btn btn-indigo w-100 py-2 fw-bold text-white">LƯU THAY ĐỔI</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Chỉ khởi tạo Modal Edit 1 lần duy nhất để quản lý qua JS
+    const editModalEl = document.getElementById('editUserModal');
+    const bsEditModal = new bootstrap.Modal(editModalEl);
+
+    // Xử lý nút Sửa
+    const editButtons = document.querySelectorAll('.btn-edit-user');
+    editButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Lấy data
+            const id = this.getAttribute('data-id');
+            const username = this.getAttribute('data-username');
+            const role = this.getAttribute('data-role');
+            const fullName = this.getAttribute('data-fullname');
+            const status = this.getAttribute('data-status');
+            const className = this.getAttribute('data-class');
+            const department = this.getAttribute('data-dept');
+
+            // Gán giá trị vào form
+            document.getElementById('edit_user_id').value = id;
+            document.getElementById('edit_username').value = username;
+            document.getElementById('edit_role').value = role;
+            document.getElementById('edit_role_hidden').value = role;
+            document.getElementById('edit_full_name').value = fullName;
+            document.getElementById('edit_status').value = status;
+
+            // Xử lý ẩn hiện field theo role
+            const divStudent = document.getElementById('edit_div_student');
+            const divTeacher = document.getElementById('edit_div_teacher');
+
+            divStudent.style.display = 'none';
+            divTeacher.style.display = 'none';
+
+            if (role === 'student') {
+                divStudent.style.display = 'block';
+                document.getElementById('edit_class_name').value = className;
+            } else if (role === 'teacher') {
+                divTeacher.style.display = 'block';
+                document.getElementById('edit_department').value = department;
+            }
+
+            // Hiển thị modal
+            bsEditModal.show();
+        });
+    });
+});
+
+// Hàm cho modal thêm mới (Inline call)
+function toggleAddFields(role) {
+    document.getElementById('add_field_student').style.display = (role === 'student') ? 'block' : 'none';
+    document.getElementById('add_field_teacher').style.display = (role === 'teacher') ? 'block' : 'none';
+}
+</script>
+
+</body>
+</html>

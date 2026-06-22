@@ -1,0 +1,849 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Student Dashboard | Digital Attendance</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      --primary-blue: #3b82f6;
+      --glass-bg: rgba(255, 255, 255, 0.92);
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: url("static/images/bg.png") center/cover no-repeat fixed;
+      display: flex;
+      justify-content: center;
+    }
+
+    .right-panel {
+      width: 100%;
+      max-width: 1100px;
+      padding: 1.5rem;
+      background: rgba(0, 0, 0, 0.05);
+      min-height: 100vh;
+    }
+
+    .nav-gradient {
+      background: linear-gradient(90deg, #0f172a, var(--primary-blue));
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      transition: 0.3s;
+    }
+    .glass-card:hover { transform: translateY(-5px); }
+
+    .camera-box {
+      position: relative;
+      width: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #000;
+      border: 3px solid var(--primary-blue);
+      display: none; /* Ẩn lúc đầu */
+    }
+    #video { width: 100%; height: auto; transform: scaleX(-1); }
+    
+    .scanner-line {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 4px;
+      background: rgba(0, 255, 0, 0.6);
+      box-shadow: 0 0 15px 5px rgba(0, 255, 0, 0.5);
+      animation: scan 2s linear infinite;
+    }
+    @keyframes scan {
+      0% { top: 0; }
+      100% { top: 100%; }
+    }
+
+    .schedule-section {
+    margin-top: 20px;
+}
+
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--primary-blue);
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.section-title i { margin-right: 10px; }
+
+/* Table phong cách hiện đại */
+.custom-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px; /* Tạo khoảng cách giữa các hàng */
+}
+
+.custom-table thead th {
+    background: rgba(59, 130, 246, 0.1);
+    color: #1e293b;
+    padding: 12px;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: none;
+}
+
+.custom-table tbody tr {
+    background: white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+}
+
+.custom-table tbody tr:hover {
+    transform: scale(1.01);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.custom-table td {
+    padding: 15px 12px;
+    vertical-align: middle;
+    font-size: 0.9rem;
+    border: none;
+}
+
+/* Bo góc cho hàng */
+.custom-table tbody tr td:first-child { border-radius: 10px 0 0 10px; }
+.custom-table tbody tr td:last-child { border-radius: 0 10px 10px 0; }
+
+/* Badge cho phòng và thứ */
+.badge-room {
+    background: #f1f5f9;
+    color: #475569;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.badge-time {
+    background: #e0f2fe;
+    color: #0369a1;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.btn-view {
+    padding: 5px 15px;
+    font-size: 0.8rem;
+    border-radius: 8px;
+    font-weight: 600;
+}
+  </style>
+</head>
+<body>
+
+<div class="right-panel">
+  <nav class="navbar navbar-dark nav-gradient shadow-sm px-3">
+    <div class="container-fluid">
+      <span class="navbar-brand fw-bold"><i class="bi bi-mortarboard-fill"></i> STUDENT HOME</span>
+      <div class="ms-auto d-flex align-items-center">
+        <span class="text-white me-3 d-none d-sm-inline">Chào, <strong>{{ session['user'] }}</strong></span>
+        <a class="btn btn-sm btn-outline-light rounded-pill" href="/logout">Đăng xuất</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid">
+    <div class="row g-4">
+      <div class="col-lg-5">
+        <div class="card glass-card p-4" id="camera-section">
+          <h5 class="fw-bold text-primary mb-3"><i class="bi bi-camera-fill"></i> Điểm danh khuôn mặt</h5>
+          
+          <div id="camera-box" class="camera-box">
+            <video id="video" autoplay muted playsinline></video>
+            <div id="scanner" class="scanner-line d-none"></div>
+          </div>
+
+          <div id="result-area" class="alert d-none mt-3">
+            <strong id="result-text"></strong>
+          </div>
+
+          <button id="startBtn" class="btn btn-primary w-100 fw-bold py-2 mt-3" onclick="startAttendance()">
+            <i class="bi bi-play-circle"></i> MỞ CAMERA ĐIỂM DANH
+          </button>
+          
+          <p class="text-muted small mt-3"><i class="bi bi-info-circle"></i> Vui lòng căn chỉnh khuôn mặt vào giữa khung hình.</p>
+        </div>
+      </div>
+
+      <div class="col-lg-7">
+        <div class="row g-3">
+          <div class="col-md-6 text-center">
+            <div class="card glass-card p-3">
+              <h6 class="text-muted">Tỷ lệ chuyên cần</h6>
+              <h3 class="fw-bold text-success">{{ attendance_rate }}%</h3>
+              <div class="progress-bar 
+                  {{ 'bg-success' if attendance_rate >= 80 
+                    else 'bg-warning' if attendance_rate >= 50 
+                    else 'bg-danger' }}"
+                  style="width: {{ attendance_rate }}%">
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 text-center">
+            <div class="card glass-card p-3">
+              <h6 class="text-muted">Số buổi vắng</h6>
+              <h3 class="fw-bold text-danger">{{ "%02d"|format(absent_count) }}</h3>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="card glass-card p-3 text-center">
+              <h6 class="text-muted mb-2">Danh sách môn học</h6>
+              <button class="btn btn-primary fw-bold rounded-pill px-4"
+                      onclick="openAllSubjectsModal()">
+                <i class="bi bi-journal-bookmark-fill me-2"></i>Xem tất cả môn học
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+
+<!-- ================= SCHEDULE HEADER ================= -->
+<div class="col-12 schedule-section">
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        
+        <h5 class="fw-bold text-white mb-0">
+            <i class="bi bi-calendar3 me-2"></i>THỜI KHÓA BIỂU TRONG TUẦN
+        </h5>
+
+        <!-- 🔥 NAVIGATION TUẦN -->
+        <div class="d-flex align-items-center gap-2">
+            <a href="?week={{ week_offset - 1 }}" class="btn btn-sm btn-light rounded-pill px-3">
+                ← Tuần trước
+            </a>
+
+            <span class="badge bg-primary rounded-pill px-3 py-2">
+                {{ start_week.strftime('%d/%m') }} – {{ end_week.strftime('%d/%m/%Y') }}
+            </span>
+
+            <a href="?week={{ week_offset + 1 }}" class="btn btn-sm btn-light rounded-pill px-3">
+                Tuần sau →
+            </a>
+
+            {% if week_offset != 0 %}
+            <a href="?week=0" class="btn btn-sm btn-outline-light rounded-pill px-3">
+                Hôm nay
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% set day_labels = {
+        0: 'Thứ Hai',
+        1: 'Thứ Ba',
+        2: 'Thứ Tư',
+        3: 'Thứ Năm',
+        4: 'Thứ Sáu',
+        5: 'Thứ Bảy',
+        6: 'Chủ Nhật'
+    } %}
+
+    {% for day_code in [0,1,2,3,4,5,6] %}
+    <div class="glass-card p-3 mb-3">
+
+        <div class="section-title d-flex justify-content-between align-items-center mb-2">
+            <span class="fw-bold {% if day_code == today_code %}text-success{% else %}text-primary{% endif %}">
+                <i class="bi bi-calendar-event me-2"></i>
+                {{ day_labels[day_code] }}
+
+                {% if day_code == today_code %}
+                <span class="badge bg-success ms-2 small" style="font-size: 0.6rem;">
+                    HÔM NAY
+                </span>
+                {% endif %}
+            </span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="custom-table mb-0">
+
+                {% if timetable.get(day_code) %}
+                <thead>
+                    <tr>
+                        <th width="30%">Môn học</th>
+                        <th width="20%">Giáo viên</th>
+                        <th width="10%">Phòng</th>
+                        <th width="20%">Thời gian</th>
+                        <th width="20%">Thao tác</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in timetable[day_code] %}
+                    <tr>
+                        <td class="fw-bold text-dark">{{ item.subject_name }}</td>
+
+                        <td class="text-muted">
+                            {{ item.teacher_name }}
+                        </td>
+
+                        <td>
+                            <span class="badge-room">{{ item.room }}</span>
+                        </td>
+
+                        <td>
+                            <span class="badge-time">
+                                {{ item.start_time.strftime('%H:%M') if item.start_time is not string else item.start_time[:5] }}
+                                →
+                                {{ item.end_time.strftime('%H:%M') if item.end_time is not string else item.end_time[:5] }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <button class="btn btn-sm btn-primary rounded-pill px-3"
+                                onclick="openSubjectDetail('{{ item.schedule_id }}', '{{ item.subject_name }}')">
+                                Xem lịch trình
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+                {% else %}
+                <tbody>
+                    <tr>
+                        <td colspan="5" class="text-center py-2 text-muted small">
+                            Không có lịch học
+                        </td>
+                    </tr>
+                </tbody>
+                {% endif %}
+
+            </table>
+        </div>
+
+    </div>
+    {% endfor %}
+
+</div>
+
+
+
+    </div>
+  </div>
+</div>
+<script>
+  let videoStream = null;
+  let recognitionInterval = null;
+  let isProcessing = false;
+
+
+  async function startAttendance() {
+    const video = document.getElementById('video');
+    const cameraBox = document.getElementById('camera-box');
+    const scanner = document.getElementById('scanner');
+    const resArea = document.getElementById('result-area');
+    const resText = document.getElementById('result-text');
+    const startBtn = document.getElementById('startBtn');
+    const resp = await fetch('/api/today_schedule_check');
+    const check = await resp.json();
+    
+    if (!check.has_class_today) {
+        const resArea = document.getElementById('result-area');
+        resArea.classList.remove('d-none');
+        resArea.className = "alert alert-secondary mt-3";
+        document.getElementById('result-text').innerHTML = 
+            `📅 Hôm nay bạn không có lịch học — không thể điểm danh`;
+        return;
+    }
+    
+    // Kiểm tra null an toàn
+    if (!video || !cameraBox || !scanner) return;
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      videoStream = stream;
+      video.srcObject = stream;
+      
+      // Hiển thị khung cam
+      cameraBox.style.display = 'block';
+      scanner.classList.remove('d-none');
+      startBtn.disabled = true;
+      startBtn.innerHTML = "⌛ Đang nhận diện...";
+
+      // Gửi frame ảnh về server mỗi 3 giây
+      recognitionInterval = setInterval(async () => {
+
+    // ❌ đang xử lý thì bỏ qua
+      if (isProcessing) return;
+      isProcessing = true;
+
+      try {
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          canvas.getContext('2d').drawImage(video, 0, 0);
+
+          const imageData = canvas.toDataURL('image/jpeg');
+
+          const resp = await fetch('/mark_attendance_single', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ image: imageData })
+          });
+
+          const data = await resp.json();
+          console.log("DATA:", data);
+
+          resArea.classList.remove('d-none');
+
+          if (data.status === 'success') {
+              resArea.className = "alert alert-success mt-3";
+              resText.innerHTML = `
+                  ✅ <b>${data.student}</b> đã điểm danh thành công <br>
+                  🕒 ${data.time}
+              `;
+
+              // 🔥 DỪNG HOÀN TOÀN
+              clearInterval(recognitionInterval);
+              stopCamera();
+              return;
+          }
+
+          // ===== FAIL =====
+          if (data.message !== "no_face") {
+              resArea.className = "alert alert-danger mt-3";
+              resText.innerHTML = `❌ ${data.message}`;
+
+              // 🔥 DỪNG nếu lỗi logic
+              if (data.message.includes("Đã điểm danh") ||
+                  data.message.includes("không có")) {
+
+                  clearInterval(recognitionInterval);
+                  stopCamera();
+              }
+          }
+
+      } catch (e) {
+          console.error("Lỗi fetch:", e);
+      } finally {
+          isProcessing = false; // 🔥 QUAN TRỌNG
+      }
+
+  }, 3000);
+
+    } catch (err) {
+      alert("Lỗi camera: " + err.message);
+    }
+  }
+
+
+async function openSubjectDetail(scheduleId, subjectName) {
+    document.getElementById('modalSubjectName').innerText = subjectName;
+    const historyBody = document.getElementById('attendance-history-body');
+    const todayStatus = document.getElementById('today-status');
+   
+    // Hiển thị loading
+    historyBody.innerHTML = '<tr><td colspan="3" class="text-center">Đang tải...</td></tr>';
+   
+    // Gọi API lấy lịch sử môn học này
+    const response = await fetch(`/api/subject_attendance/${scheduleId}`);
+    const data = await response.json();
+
+
+const t = data.today;
+const isEnded = data.is_ended;
+const notStarted = data.not_started; // 🔥 thêm dòng này
+const type = (t?.type || t?.status || '').toLowerCase();
+
+
+// 🔥 ƯU TIÊN CAO NHẤT
+// Thay đoạn check notStarted hiện tại:
+if (notStarted) {
+    todayStatus.className = "p-3 rounded mb-4 text-center bg-secondary-subtle text-secondary border border-secondary";
+   
+    // 🔥 Phân biệt chưa tới ngày vs chưa tới giờ
+    todayStatus.innerHTML = data.is_today
+        ? `⏳ Chưa tới giờ điểm danh`
+        : `📅 Hôm nay không phải ngày học môn này`;
+
+
+    // Vẫn load lịch sử bình thường
+    historyBody.innerHTML = data.history.map(row => `
+        <tr>
+            <td>${row.date}</td>
+            <td>${row.checkin_time || '—'}</td>
+            <td><span class="badge ${row.status == 'Present' ? 'bg-success' : 'bg-danger'}">${row.status}</span></td>
+        </tr>
+    `).join('') || '<tr><td colspan="3" class="text-center">Chưa có dữ liệu</td></tr>';
+
+
+    const myModal = new bootstrap.Modal(document.getElementById('subjectModal'));
+    myModal.show();
+    return; // 🔥 DỪNG, không cho điểm danh
+}
+if (isEnded) {
+    todayStatus.className = "p-3 rounded mb-4 text-center bg-danger-subtle text-danger border border-danger";
+
+
+    if (!t || type === 'absent' || type === 'overdue') {
+        todayStatus.innerHTML = `🚫 Đã qua giờ điểm danh – Vắng buổi này`;
+    } else if (type === 'present') {
+        todayStatus.innerHTML = `✅ Đã điểm danh đúng giờ<br><small>Lúc: ${t.checkin_time}</small>`;
+    } else if (type === 'late') {
+        todayStatus.innerHTML = `⏰ Đã điểm danh (Trễ)<br><small>Lúc: ${t.checkin_time}</small>`;
+    } else {
+        // 🔥 fallback chống trắng UI
+        todayStatus.innerHTML = `⚠️ Trạng thái không xác định (${t?.type})`;
+    }
+
+
+} else {
+    if (!t) {
+        todayStatus.className = "p-3 rounded mb-4 text-center bg-warning-subtle text-warning border border-warning";
+        todayStatus.innerHTML = `
+            <p class="mb-2 fw-bold">⚠️ Bạn chưa điểm danh môn này hôm nay!</p>
+            <button class="btn btn-warning fw-bold px-4 shadow-sm"
+                    onclick="scrollToCamera('${scheduleId}')">
+                📸 ĐIỂM DANH NGAY
+            </button>`;
+    } else if (type === 'present') {
+        todayStatus.className = "p-3 rounded mb-4 text-center bg-success-subtle text-success border border-success";
+        todayStatus.innerHTML = `✅ Đã điểm danh đúng giờ<br><small>Lúc: ${t.checkin_time}</small>`;
+    } else if (type === 'late') {
+        todayStatus.className = "p-3 rounded mb-4 text-center bg-warning-subtle text-warning border border-warning";
+        todayStatus.innerHTML = `⏰ Đã điểm danh (Trễ)<br><small>Lúc: ${t.checkin_time}</small>`;
+    }
+}
+    // 2. Nạp lịch sử
+    historyBody.innerHTML = data.history.map(row => `
+        <tr>
+            <td>${row.date}</td>
+            <td>${row.checkin_time}</td>
+            <td><span class="badge ${row.status == 'Present' ? 'bg-success' : 'bg-danger'}">${row.status}</span></td>
+        </tr>
+    `).join('') || '<tr><td colspan="3" class="text-center">Chưa có dữ liệu</td></tr>';
+
+
+    // Mở modal
+    const myModal = new bootstrap.Modal(document.getElementById('subjectModal'));
+    myModal.show();
+}
+
+
+function scrollToCamera(scheduleId) {
+    const modal = bootstrap.Modal.getInstance(document.getElementById('subjectModal'));
+    if (modal) modal.hide();
+  setTimeout(() => {
+        document.body.classList.remove('modal-open');
+
+
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    }, 300);
+    // 🔥 Scroll đúng vùng (card)
+    const camSection = document.getElementById('camera-section');
+    camSection.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+    });
+
+
+    // 🔥 delay để scroll xong rồi mở camera
+    setTimeout(() => {
+        document.body.classList.remove('modal-open');
+
+
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        backdrops.forEach(el => el.remove());
+
+
+        // Scroll xuống camera
+        const camSection = document.getElementById('camera-section');
+        camSection.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+        });
+        startAttendance();
+    }, 500);
+}
+ function stopCamera() {
+    // dừng camera
+    if (videoStream) {
+        videoStream.getTracks().forEach(track => track.stop());
+    }
+
+
+    // dừng vòng lặp
+    clearInterval(recognitionInterval);
+
+
+    // ẩn scanner
+    document.getElementById('scanner').classList.add('d-none');
+
+
+    // ẩn camera box
+    document.getElementById('camera-box').style.display = 'none';
+
+
+    // 🔥 reset nút start
+    const startBtn = document.getElementById('startBtn');
+    startBtn.disabled = false;
+    startBtn.innerHTML = "📷 MỞ CAMERA ĐIỂM DANH";
+}
+
+
+  // Biểu đồ
+  const ctx = document.getElementById('studentChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'],
+      datasets: [{
+        label: 'Số giờ',
+        data: [4, 6, 0, 5, 4, 2, 0],
+        backgroundColor: '#3b82f6',
+        borderRadius: 5
+      }]
+    },
+    options: { maintainAspectRatio: false }
+  });
+  // =============================================
+// MODAL: XEM TẤT CẢ MÔN HỌC + CHI TIẾT CHUYÊN CẦN
+// =============================================
+
+
+async function openAllSubjectsModal() {
+  document.getElementById('allSubjectsModalTitle').innerHTML =
+    '<i class="bi bi-journal-bookmark-fill me-2"></i>Tất cả môn học';
+
+
+  const body = document.getElementById('allSubjectsModalBody');
+  body.innerHTML = '<div class="text-center py-4 text-muted">Đang tải...</div>';
+
+
+  const modal = new bootstrap.Modal(document.getElementById('allSubjectsModal'));
+  modal.show();
+
+
+  // Gọi API lấy danh sách môn học của SV
+  const resp = await fetch('/api/my_subjects');
+  const data = await resp.json();
+
+
+  renderSubjectList(data.subjects);
+}
+
+
+function renderSubjectList(subjects) {
+  const body = document.getElementById('allSubjectsModalBody');
+  document.getElementById('allSubjectsModalTitle').innerHTML =
+    '<i class="bi bi-journal-bookmark-fill me-2"></i>Tất cả môn học';
+
+
+  if (!subjects || subjects.length === 0) {
+    body.innerHTML = '<p class="text-center text-muted py-3">Không có môn học nào.</p>';
+    return;
+  }
+
+
+  body.innerHTML = subjects.map(s => {
+    const rateColor = s.rate >= 80 ? '#16a34a' : s.rate >= 60 ? '#d97706' : '#dc2626';
+    const rateBg    = s.rate >= 80 ? '#dcfce7' : s.rate >= 60 ? '#fef9c3' : '#fee2e2';
+
+
+    return `
+      <div class="p-3 mb-2 rounded-3 border bg-white"
+           style="cursor:pointer; transition:all .25s"
+           onmouseover="this.style.borderColor='#3b82f6'; this.style.transform='translateX(4px)'"
+           onmouseout="this.style.borderColor='#dee2e6'; this.style.transform=''"
+           onclick="renderSubjectDetail(${JSON.stringify(s).replace(/"/g,'&quot;')})">
+
+
+        <!-- Dòng trên: icon + tên + badge tỷ lệ -->
+        <div class="d-flex align-items-center mb-2">
+          <div class="me-3 fs-3">📘</div>
+          <div class="flex-grow-1">
+            <div class="fw-bold text-dark">${s.subject_name}</div>
+            <small class="text-muted">${s.teacher_name}</small>
+          </div>
+          <span class="badge rounded-pill fw-bold px-3 py-2 me-2"
+                style="background:${rateBg}; color:${rateColor}; font-size:.85rem">
+            ${s.rate}%
+          </span>
+          <i class="bi bi-chevron-right text-muted"></i>
+        </div>
+
+
+        <!-- Dòng dưới: 3 số liệu -->
+        <div class="d-flex gap-2 ms-5 ps-1">
+          <span class="badge bg-success-subtle text-success rounded-pill px-3">
+            <i class="bi bi-check-circle-fill me-1"></i>Đúng giờ: ${s.present ?? 0}
+          </span>
+          <span class="badge bg-warning-subtle text-warning rounded-pill px-3">
+            <i class="bi bi-clock-fill me-1"></i>Trễ: ${s.late ?? 0}
+          </span>
+          <span class="badge bg-danger-subtle text-danger rounded-pill px-3">
+            <i class="bi bi-x-circle-fill me-1"></i>Vắng: ${s.absent ?? 0}
+          </span>
+        </div>
+
+
+      </div>`;
+  }).join('');
+}
+
+
+async function renderSubjectDetail(s) {
+  const body = document.getElementById('allSubjectsModalBody');
+  document.getElementById('allSubjectsModalTitle').innerHTML =
+    `<button class="btn btn-sm btn-outline-light me-2"
+             onclick="openAllSubjectsModal()">← Quay lại</button> ${s.subject_name}`;
+
+
+  body.innerHTML = '<div class="text-center py-4 text-muted">Đang tải...</div>';
+
+
+  // Gọi API lấy chi tiết chuyên cần môn này
+  const resp = await fetch(`/api/subject_attendance/${s.schedule_id}`);
+  const data = await resp.json();
+
+
+  const progColor = s.rate >= 80 ? '#16a34a' : s.rate >= 60 ? '#d97706' : '#dc2626';
+  const histRows = data.history.map(h => `
+    <tr>
+      <td>${h.date}</td>
+      <td>${h.checkin_time || '—'}</td>
+      <td><span class="badge ${h.status === 'Present' ? 'bg-success' : 'bg-danger'}">
+        ${h.status === 'Present' ? 'Có mặt' : 'Vắng'}
+      </span></td>
+    </tr>`).join('') || '<tr><td colspan="3" class="text-center text-muted">Chưa có dữ liệu</td></tr>';
+
+
+  body.innerHTML = `
+    <!-- STATS -->
+    <div class="row g-2 mb-3">
+      <div class="col-4 text-center">
+        <div class="card border-0 bg-success-subtle p-3 rounded-3">
+          <h3 class="fw-bold text-success mb-0">${s.present ?? data.present ?? '—'}</h3>
+          <small class="text-muted">Có mặt</small>
+        </div>
+      </div>
+      <div class="col-4 text-center">
+        <div class="card border-0 bg-danger-subtle p-3 rounded-3">
+          <h3 class="fw-bold text-danger mb-0">${s.absent ?? data.absent ?? '—'}</h3>
+          <small class="text-muted">Vắng</small>
+        </div>
+      </div>
+      <div class="col-4 text-center">
+        <div class="card border-0 bg-primary-subtle p-3 rounded-3">
+          <h3 class="fw-bold text-primary mb-0">${s.total ?? data.total ?? '—'}</h3>
+          <small class="text-muted">Tổng buổi</small>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- PROGRESS -->
+    <div class="mb-3">
+      <div class="d-flex justify-content-between mb-1">
+        <small class="fw-bold text-dark">Tỷ lệ chuyên cần</small>
+        <small class="fw-bold" style="color:${progColor}">${s.rate}%</small>
+      </div>
+      <div class="progress" style="height:10px; border-radius:99px">
+        <div class="progress-bar" role="progressbar"
+             style="width:${s.rate}%; background:${progColor}; border-radius:99px; transition:width .6s ease">
+        </div>
+      </div>
+      <small class="text-${s.rate < 80 ? 'danger' : 'muted'} mt-1 d-block">
+        ${s.rate < 80 ? '⚠️ Dưới ngưỡng 80% – có nguy cơ cấm thi' : '✅ Đạt yêu cầu chuyên cần'}
+      </small>
+    </div>
+
+
+    <!-- HISTORY -->
+    <h6 class="fw-bold mb-2"><i class="bi bi-clock-history me-2"></i>Lịch sử điểm danh</h6>
+    <div class="table-responsive">
+      <table class="table table-sm small">
+        <thead class="table-light">
+          <tr><th>Ngày</th><th>Giờ vào</th><th>Trạng thái</th></tr>
+        </thead>
+        <tbody>${histRows}</tbody>
+      </table>
+    </div>
+  `;
+}
+</script>
+<div class="modal fade" id="subjectModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content glass-card border-0">
+      <div class="modal-header border-0">
+        <h5 class="modal-title fw-bold text-primary" id="modalSubjectName">Tên môn học</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="today-status" class="p-3 rounded mb-4 text-center">
+            </div>
+
+
+        <h6 class="fw-bold mb-3"><i class="bi bi-history me-2"></i>Lịch sử điểm danh môn này</h6>
+        <div class="table-responsive">
+            <table class="table table-sm small">
+                <thead class="table-light">
+                    <tr>
+                        <th>Ngày</th>
+                        <th>Giờ vào</th>
+                        <th>Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody id="attendance-history-body">
+                    </tbody>
+            </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ===== MODAL: TẤT CẢ MÔN HỌC ===== -->
+<div class="modal fade" id="allSubjectsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content glass-card border-0">
+
+
+      <!-- Header -->
+      <div class="modal-header border-0"
+           style="background: linear-gradient(90deg,#0f172a,#3b82f6); border-radius:18px 18px 0 0;">
+        <h5 class="modal-title fw-bold text-white" id="allSubjectsModalTitle">
+          <i class="bi bi-journal-bookmark-fill me-2"></i>Tất cả môn học
+        </h5>
+        <button type="button" class="btn-close btn-close-white"
+                data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+
+      <div class="modal-body p-3" id="allSubjectsModalBody">
+        <!-- Nội dung sẽ do JS render -->
+      </div>
+
+
+    </div>
+  </div>
+</div>
+
+
+</body>
+</html>
+

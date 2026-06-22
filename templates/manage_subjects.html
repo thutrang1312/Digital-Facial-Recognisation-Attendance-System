@@ -1,0 +1,996 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quản lý Thời khóa biểu | Admin System</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+  <style>
+    :root {
+      --admin-color: #6366f1;
+      --glass-bg: rgba(255, 255, 255, 0.92);
+      --sidebar-bg: rgba(15, 23, 42, 0.95);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: url("static/images/bg1.jpg") center/cover no-repeat fixed;
+
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ===================== SIDEBAR ===================== */
+    .sidebar {
+      width: 260px;
+      background: var(--sidebar-bg);
+      backdrop-filter: blur(10px);
+      color: white;
+      display: flex; flex-direction: column;
+      padding: 1.5rem;
+      position: fixed; height: 100vh;
+      z-index: 1000;
+    }
+    .sidebar-brand { font-size: 1.2rem; font-weight: 800; color: #818cf8; margin-bottom: 2rem; }
+    .nav-link {
+      color: #94a3b8; padding: 12px 15px; border-radius: 10px;
+      margin-bottom: 5px; transition: 0.3s; display: flex; align-items: center; text-decoration: none;
+    }
+    .nav-link i { margin-right: 12px; font-size: 1.1rem; }
+    .nav-link:hover, .nav-link.active { background: rgba(99, 102, 241, 0.2); color: white; }
+
+    /* ===================== MAIN ===================== */
+    .main-content { flex: 1; margin-left: 260px; padding: 2rem; }
+
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.3);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+      margin-bottom: 1.5rem;
+    }
+
+    /* ===================== TIMETABLE GRID ===================== */
+    .timetable-wrap { overflow-x: auto; }
+
+    .timetable {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 4px;
+      min-width: 860px;
+    }
+
+    .timetable thead th {
+      background: linear-gradient(135deg, #6366f1, #818cf8);
+      color: white;
+      text-align: center;
+      padding: 12px 8px;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .timetable thead th.time-col { background: #1e293b; min-width: 90px; }
+
+    .timetable tbody td {
+      padding: 4px;
+      vertical-align: top;
+    }
+    .timetable tbody td.time-slot {
+      background: rgba(30,41,59,0.06);
+      border-radius: 10px;
+      text-align: center;
+      font-size: 0.78rem;
+      color: #64748b;
+      font-weight: 600;
+      padding: 12px 8px;
+      white-space: nowrap;
+    }
+
+    /* Cell ô trống */
+    .cell-empty {
+      height: 70px;
+      border: 2px dashed #e2e8f0;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: 0.2s;
+      color: #cbd5e1;
+      font-size: 0.8rem;
+    }
+    .cell-empty:hover {
+      border-color: #6366f1;
+      background: rgba(99,102,241,0.05);
+      color: #6366f1;
+    }
+
+    /* Cell có môn học */
+    .cell-subject {
+      height: 70px;
+      border-radius: 12px;
+      padding: 8px 10px;
+      cursor: pointer;
+      transition: 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .cell-subject:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.12); }
+    .cell-subject .subj-name { font-size: 0.78rem; font-weight: 700; line-height: 1.3; }
+    .cell-subject .subj-teacher { font-size: 0.7rem; opacity: 0.85; margin-top: 3px; }
+    .cell-subject .subj-room { font-size: 0.68rem; opacity: 0.7; }
+    .cell-subject .btn-del {
+      position: absolute; top: 4px; right: 5px;
+      background: none; border: none; cursor: pointer;
+      font-size: 0.75rem; opacity: 0; transition: 0.2s;
+      color: inherit;
+      padding: 0; line-height: 1;
+    }
+    .cell-subject:hover .btn-del { opacity: 0.8; }
+    .cell-subject .btn-del:hover { opacity: 1; }
+
+    /* Màu theo môn */
+    .color-0 { background: linear-gradient(135deg,#dbeafe,#bfdbfe); color: #1e40af; }
+    .color-1 { background: linear-gradient(135deg,#dcfce7,#bbf7d0); color: #166534; }
+    .color-2 { background: linear-gradient(135deg,#fef3c7,#fde68a); color: #92400e; }
+    .color-3 { background: linear-gradient(135deg,#fce7f3,#fbcfe8); color: #9d174d; }
+    .color-4 { background: linear-gradient(135deg,#ede9fe,#ddd6fe); color: #5b21b6; }
+    .color-5 { background: linear-gradient(135deg,#ffedd5,#fed7aa); color: #9a3412; }
+    .color-6 { background: linear-gradient(135deg,#cffafe,#a5f3fc); color: #164e63; }
+    .color-7 { background: linear-gradient(135deg,#f0fdf4,#bbf7d0); color: #14532d; }
+
+    /* ===================== FILTER BAR ===================== */
+    .filter-bar {
+      display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+    }
+    .filter-bar select, .filter-bar input {
+      border-radius: 10px; border: 1.5px solid #e2e8f0;
+      padding: 8px 14px; font-size: 0.87rem;
+      background: white; outline: none; transition: 0.2s;
+    }
+    .filter-bar select:focus, .filter-bar input:focus { border-color: #6366f1; }
+
+    .btn-primary-custom {
+      background: linear-gradient(135deg, #6366f1, #818cf8);
+      color: white; border: none; border-radius: 10px;
+      padding: 8px 18px; font-weight: 600; font-size: 0.87rem;
+      cursor: pointer; transition: 0.2s;
+    }
+    .btn-primary-custom:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    /* ===================== MODAL ===================== */
+    .modal-content { border-radius: 18px; border: none; }
+    .modal-header { background: linear-gradient(135deg, #6366f1, #818cf8); border-radius: 18px 18px 0 0; }
+    .modal-header .modal-title, .modal-header .btn-close { color: white; }
+    .modal-header .btn-close { filter: invert(1); }
+
+    .form-label { font-weight: 600; font-size: 0.85rem; color: #374151; }
+    .form-control, .form-select {
+      border-radius: 10px; border: 1.5px solid #e2e8f0;
+      font-size: 0.87rem; padding: 9px 14px;
+    }
+    .form-control:focus, .form-select:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+
+    /* ===================== SUBJECT LIST TABLE ===================== */
+    .subj-table thead th {
+      background: rgba(99,102,241,0.08);
+      font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px;
+      padding: 12px 14px; border: none;
+    }
+    .subj-table tbody td { padding: 12px 14px; vertical-align: middle; font-size: 0.87rem; }
+    .subj-table tbody tr:hover { background: rgba(99,102,241,0.04); }
+
+    .badge-subject {
+      padding: 5px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600;
+    }
+
+    /* Tabs */
+    .nav-tabs { border-bottom: 2px solid #e2e8f0; }
+    .nav-tabs .nav-link {
+      color: #64748b; border: none; padding: 10px 20px; font-weight: 600;
+      border-radius: 0; margin-bottom: -2px;
+    }
+    .nav-tabs .nav-link.active { color: #6366f1; border-bottom: 2px solid #6366f1; background: none; }
+    .nav-tabs .nav-link:hover { color: #6366f1; background: none; }
+
+    /* Toast */
+    .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; }
+    .toast { border-radius: 12px; }
+
+    /* Legend */
+    .legend-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+  </style>
+</head>
+<body>
+
+<!-- ==================== SIDEBAR ==================== -->
+<div class="sidebar shadow">
+  <div class="sidebar-brand"><i class="bi bi-shield-lock-fill"></i> ADMIN SYSTEM</div>
+  <nav class="nav flex-column">
+<small class="text-uppercase text-white fw-bold mb-2" style="font-size:0.7rem;">
+  Hệ thống
+</small>    <a href="/dashboard" class="nav-link"><i class="bi bi-speedometer2"></i> Tổng quan</a>
+    <small class="text-uppercase text-white fw-bold mb-2" style="font-size:0.7rem;">Quản lý dữ liệu</small>
+    <a href="/manage_users" class="nav-link"><i class="bi bi-people"></i> Tài khoản</a>
+    <a href="/manage_teachers" class="nav-link"><i class="bi bi-person-badge"></i> Giáo viên</a>
+    <a href="/manage_subjects" class="nav-link active"><i class="bi bi-book"></i> Môn học & Lịch</a>
+   <small class="text-uppercase text-white fw-bold mb-2" style="font-size:0.7rem;">Báo cáo</small>
+    <a href="/attendance_record" class="nav-link"><i class="bi bi-journal-check"></i> Nhật ký điểm danh</a>
+    <a href="/export_data" class="nav-link"><i class="bi bi-file-earmark-excel"></i> Xuất dữ liệu</a>
+  </nav>
+  <div class="mt-auto">
+    <a href="/logout" class="nav-link text-danger"><i class="bi bi-box-arrow-left"></i> Đăng xuất</a>
+  </div>
+</div>
+
+<!-- ==================== MAIN CONTENT ==================== -->
+<div class="main-content">
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4 ">
+    <div>
+      <h4 class="fw-bold mb-0">
+<i class="bi bi-calendar3 me-2" style="color:black;"></i>Quản lý Thời khóa biểu</h4>
+<small class="text-dark">
+  Cấu hình lịch học và phân công giảng viên
+</small>
+    </div>
+    <span>Chào, <strong>Admin</strong> <i class="bi bi-person-circle ms-2"></i></span>
+  </div>
+
+  <!-- Tabs -->
+  <div class="glass-card p-0 overflow-hidden">
+    <ul class="nav nav-tabs px-3 pt-2" id="mainTabs">
+      <li class="nav-item">
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-timetable">
+          <i class="bi bi-grid-3x3-gap me-1"></i> Thời khóa biểu
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-subjects">
+          <i class="bi bi-book me-1"></i> Danh sách Môn học
+        </button>
+      </li>
+    </ul>
+
+    <div class="tab-content p-4">
+
+      <!-- ===== TAB 1: TIMETABLE ===== -->
+      <div class="tab-pane fade show active" id="tab-timetable">
+
+        <!-- Filter -->
+        <div class="filter-bar mb-4">
+          <select id="filterClass" onchange="renderTimetable()">
+  
+            {% for c in classes %}
+            <option value="{{ c }}">{{ c }}</option>
+            {% endfor %}
+          </select>
+          <select id="filterSemester">
+            <option value="HK1-2024">HK1 - 2024/2025</option>
+            <option value="HK2-2024">HK2 - 2024/2025</option>
+          </select>
+          <button class="btn-primary-custom ms-auto" onclick="openAddModal()">
+            <i class="bi bi-plus-lg me-1"></i> Thêm lịch học
+          </button>
+          <button class="btn-primary-custom" style="background: linear-gradient(135deg,#10b981,#34d399);" onclick="exportExcel()">
+            <i class="bi bi-file-earmark-excel me-1"></i> Xuất Excel
+          </button>
+        </div>
+
+        <!-- Timetable Grid -->
+        <div class="timetable-wrap">
+          <table class="timetable" id="timetableGrid">
+            <thead>
+              <tr>
+                <th class="time-col">Tiết / Ngày</th>
+                <th>Thứ 2</th>
+                <th>Thứ 3</th>
+                <th>Thứ 4</th>
+                <th>Thứ 5</th>
+                <th>Thứ 6</th>
+                <th>Thứ 7</th>
+              </tr>
+            </thead>
+            <tbody id="timetableBody"></tbody>
+          </table>
+        </div>
+
+        <!-- Legend -->
+        <div class="d-flex gap-3 flex-wrap mt-3" id="legend"></div>
+
+      </div>
+
+      <!-- ===== TAB 2: SUBJECT LIST ===== -->
+      <div class="tab-pane fade" id="tab-subjects">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div class="filter-bar">
+            <input type="text" id="searchSubject" placeholder="🔍 Tìm môn học..." oninput="renderSubjectTable()">
+          </div>
+          <button class="btn-primary-custom" onclick="openSubjectModal()">
+            <i class="bi bi-plus-lg me-1"></i> Thêm môn học
+          </button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table subj-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Mã môn</th>
+                <th>Tên môn học</th>
+                <th>Tín chỉ</th>
+                <th>Giảng viên phụ trách</th>
+                <th>Phòng học</th>
+                <th>Lớp</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="subjectTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MODAL: THÊM/SỬA LỊCH HỌC ==================== -->
+<div class="modal fade" id="scheduleModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content shadow-lg">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold" id="scheduleModalTitle">
+          <i class="bi bi-calendar-plus me-2"></i>Thêm lịch học
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Môn học <span class="text-danger">*</span></label>
+            <select class="form-select" id="sch_subject">
+              <option value="">-- Chọn môn học --</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Giảng viên <span class="text-danger">*</span></label>
+            <select class="form-select" id="sch_teacher">
+              <option value="">-- Chọn giảng viên --</option>
+              {% for t in teachers %}
+              <option value="{{ t.id }}">{{ t.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Lớp <span class="text-danger">*</span></label>
+            <select class="form-select" id="sch_class">
+              <option value="CNTT01">23SE3</option>
+              <option value="CNTT02">23SE3</option>
+              <option value="KTPM01">23SE3</option>
+              <option value="HTTT01">23SE3</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Ngày trong tuần <span class="text-danger">*</span></label>
+            <select class="form-select" id="sch_day">
+              <option value="0">Thứ 2</option>
+              <option value="1">Thứ 3</option>
+              <option value="2">Thứ 4</option>
+              <option value="3">Thứ 5</option>
+              <option value="4">Thứ 6</option>
+              <option value="5">Thứ 7</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Tiết học <span class="text-danger">*</span></label>
+            <select class="form-select" id="sch_slot">
+              <option value="0">Tiết 1-2 (07:00–08:30)</option>
+              <option value="1">Tiết 3-4 (08:45–10:15)</option>
+              <option value="2">Tiết 5-6 (10:30–12:00)</option>
+              <option value="3">Tiết 7-8 (13:00–14:30)</option>
+              <option value="4">Tiết 9-10 (14:45–16:15)</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Phòng học <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="sch_room" placeholder="VD: A101, B203...">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Ngày bắt đầu</label>
+            <input type="date" class="form-control" id="sch_startdate">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Ngày kết thúc</label>
+            <input type="date" class="form-control" id="sch_enddate">
+          </div>
+          <div class="col-12">
+            <label class="form-label">Ghi chú</label>
+            <textarea class="form-control" id="sch_note" rows="2" placeholder="Ghi chú thêm (tùy chọn)..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-0">
+        <button class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
+        <button class="btn-primary-custom rounded-pill px-4" onclick="saveSchedule()">
+          <i class="bi bi-check-lg me-1"></i> Lưu lịch học
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MODAL: THÊM MÔN HỌC ==================== -->
+<div class="modal fade" id="subjectModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content shadow-lg">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold" id="subjectModalTitle">
+          <i class="bi bi-book-half me-2"></i>Thêm môn học mới
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="row g-3">
+          <div class="col-md-5">
+            <label class="form-label">Mã môn <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="sub_code" placeholder="VD: CS101">
+          </div>
+          <div class="col-md-7">
+            <label class="form-label">Tên môn học <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="sub_name" placeholder="Tên đầy đủ môn học">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Số tín chỉ</label>
+            <input type="number" class="form-control" id="sub_credits" value="3" min="1" max="6">
+          </div>
+          <div class="col-md-8">
+            <label class="form-label">Giảng viên phụ trách</label>
+            <select class="form-select" id="sub_teacher">
+              <option value="">-- Chọn giảng viên --</option>
+              {% for t in teachers %}
+              <option value="{{ t.id }}">{{ t.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Phòng học mặc định</label>
+            <input type="text" class="form-control" id="sub_room" placeholder="VD: A101">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Trạng thái</label>
+            <select class="form-select" id="sub_status">
+              <option value="active">Đang hoạt động</option>
+              <option value="inactive">Tạm dừng</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-0">
+        <button class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
+        <button class="btn-primary-custom rounded-pill px-4" onclick="saveSubject()">
+          <i class="bi bi-check-lg me-1"></i> Lưu môn học
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MODAL: XEM CHI TIẾT LỊCH ==================== -->
+<div class="modal fade" id="viewModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content shadow-lg">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold"><i class="bi bi-info-circle me-2"></i>Chi tiết lịch học</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4" id="viewModalBody"></div>
+      <div class="modal-footer border-0">
+        <button class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>
+        <button class="btn btn-warning rounded-pill px-4" id="btnEditFromView">
+          <i class="bi bi-pencil me-1"></i> Sửa
+        </button>
+        <button class="btn btn-danger rounded-pill px-4" id="btnDeleteFromView">
+          <i class="bi bi-trash me-1"></i> Xóa
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-container">
+  <div id="toastMsg" class="toast align-items-center text-white border-0" role="alert">
+    <div class="d-flex">
+      <div class="toast-body fw-semibold" id="toastText">Thành công!</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SCRIPT ==================== -->
+<!-- Server data as JSON to avoid Jinja in JS context -->
+<script id="server-data" type="application/json">
+{
+  "subjects": {{ subjects|tojson|safe }},
+  "schedules": {{ schedules|tojson|safe }},
+  "teachers": {{ teachers|tojson|safe }},
+  "classes": {{ classes|tojson|safe }}
+}
+</script>
+
+<script>
+// ===== DATA =====
+const SLOTS = [
+  "Tiết 1\n07:30",
+  "Tiết 2\n08:30",
+  "Tiết 3\n09:30",
+  "Tiết 4\n10:30",
+  "Tiết 5\n11:30",
+  "Tiết 6\n13:00",
+  "Tiết 7\n14:00",
+  "Tiết 8\n15:00",
+  "Tiết 9\n16:00",
+  "Tiết 10\n17:00"
+];
+const DAYS = ["Thứ 2","Thứ 3","Thứ 4","Thứ 5","Thứ 6","Thứ 7"];
+const COLORS = ["color-0","color-1","color-2","color-3","color-4","color-5","color-6","color-7"];
+
+// Load data provided by the server and normalize to the UI format
+let subjects_raw = [];
+let schedules_raw = [];
+let teachers_raw = [];
+let classes_raw = [];
+try {
+  const serverDataEl = document.getElementById('server-data');
+  if (serverDataEl) {
+    const parsed = JSON.parse(serverDataEl.textContent || '{}');
+    subjects_raw = parsed.subjects || [];
+    schedules_raw = parsed.schedules || [];
+    teachers_raw = parsed.teachers || [];
+    classes_raw = parsed.classes || [];
+  }
+} catch (e) {
+  console.error('Error parsing server JSON data', e);
+}
+
+// Normalize subjects to expected fields used by the JS UI
+function normalizeSubjects(arr){
+  return arr.map(s => ({
+    id: s.id,
+    code: s.code || s.subject_code || (s.class_name ? `${s.class_name}-${s.id}` : `S${s.id}`),
+    name: s.name || s.subject_name || ('Môn ' + s.id),
+    credits: s.credits || s.credit || 3,
+    teacher_id: s.teacher_id || null,
+    teacher: s.teacher_name || s.teacher || '',
+    room: s.room || '',
+    status: s.status || 'active',
+    class_name: s.class_name || ''
+  }));
+}
+
+function parseDaysOfWeek(value){
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'string') {
+    try { return JSON.parse(value); } catch (e) { return []; }
+  }
+  return [];
+}
+
+function timeToMinutes(timeString){
+  const parts = String(timeString).trim().match(/(\d{1,2}):(\d{2})/);
+  if (!parts) return null;
+  return parseInt(parts[1], 10) * 60 + parseInt(parts[2], 10);
+}
+
+function findSlotForTime(timeString){
+  const minutes = timeToMinutes(timeString);
+  if (minutes === null) return -1;
+  const ranges = [
+  [450, 500],  // 07:30
+  [510, 560],  // 08:30
+  [570, 620],  // 09:30
+  [630, 680],  // 10:30
+  [690, 740],  // 11:30
+  [780, 830],  // 13:00
+  [840, 890],  // 14:00
+  [900, 950],  // 15:00
+  [960, 1010], // 16:00
+  [1020, 1070] // 17:00
+];
+  for (let i = 0; i < ranges.length; i++) {
+    const [start, end] = ranges[i];
+    if (minutes >= start && minutes <= end) return i;
+  }
+  return -1;
+}
+
+// Normalize schedules to one entry per scheduled day: {id, subjectId, teacher_id, teacher, class, day, slot, room}
+function normalizeSchedules(arr){
+  const result = [];
+  arr.forEach(s => {
+    const days = parseDaysOfWeek(s.days_of_week).map(d => {
+      if (typeof d === 'number' && d >= 1 && d <= 7) return d - 1; // convert 1-based to 0-based
+      return d;
+    }).filter(d => typeof d === 'number');
+
+    let slot = (s.slot !== undefined && s.slot !== null) ? s.slot : -1;
+    if (slot === -1 && s.start_time) {
+      slot = findSlotForTime(s.start_time);
+    }
+
+    days.forEach(day => {
+      if (day === null || day === undefined) return;
+      result.push({
+        id: s.id,
+        subjectId: s.subject_id || s.subjectId || null,
+        teacher: s.teacher_name || s.teacher || '',
+        class: s.class_name || s.class || '',
+        day: day,
+        slot: slot,
+        room: s.room || '',
+        days_of_week: days,
+        raw: s
+      });
+    });
+  });
+  return result.filter(x => x.subjectId !== null && x.day !== null && x.slot >= 0);
+}
+
+let subjects = normalizeSubjects(subjects_raw);
+let schedules = normalizeSchedules(schedules_raw);
+let editingScheduleId = null;
+let editingSubjectId = null;
+let viewingId = null;
+console.log('DEBUG schedules_raw length=', schedules_raw.length, 'normalized length=', schedules.length);
+let nextSchId = schedules.length ? Math.max(...schedules.map(s=>s.id))+1 : 1;
+let nextSubId = subjects.length ? Math.max(...subjects.map(s=>s.id))+1 : 1;
+
+// Color map by subjectId
+const colorMap = {};
+subjects.forEach((s,i) => colorMap[s.id] = COLORS[i % COLORS.length]);
+
+// Debug logs to help diagnose missing subjects
+console.log('DEBUG subjects (normalized):', subjects);
+console.log('DEBUG schedules (normalized):', schedules);
+
+// ===== RENDER TIMETABLE =====
+function renderTimetable() {
+  const filterClass = document.getElementById('filterClass').value;
+  const body = document.getElementById('timetableBody');
+  body.innerHTML = '';
+
+  const filtered = filterClass
+    ? schedules.filter(s => s.class === filterClass)
+    : schedules;
+  console.log('DEBUG renderTimetable filterClass=', filterClass, 'filtered count=', filtered.length);
+
+  SLOTS.forEach((slotLabel, si) => {
+    const tr = document.createElement('tr');
+    // Time column
+    const tdTime = document.createElement('td');
+    tdTime.className = 'time-slot';
+    tdTime.innerHTML = slotLabel.replace('\n','<br>');
+    tr.appendChild(tdTime);
+
+    DAYS.forEach((_, di) => {
+      const td = document.createElement('td');
+      const sched = filtered.find(s => s.day === di && s.slot === si);
+      if (sched) {
+        console.log('DEBUG cell occupied:', {day:di, slot:si, sched});
+        const subj = subjects.find(s => s.id === sched.subjectId);
+        const color = colorMap[sched.subjectId] || 'color-0';
+        td.innerHTML = `
+          <div class="cell-subject ${color}" onclick="viewSchedule(${sched.id})">
+            <button class="btn-del" onclick="event.stopPropagation();deleteSchedule(${sched.id})"><i class="bi bi-x-lg"></i></button>
+            <div class="subj-name">${subj ? subj.name : '?'}</div>
+            <div class="subj-teacher"><i class="bi bi-person-fill"></i> ${sched.teacher}</div>
+            <div class="subj-room"><i class="bi bi-geo-alt-fill"></i> ${sched.room} · ${sched.class}</div>
+          </div>`;
+      } else {
+        td.innerHTML = `<div class="cell-empty" onclick="openAddModal(${di},${si})"><i class="bi bi-plus-lg"></i></div>`;
+      }
+      tr.appendChild(td);
+    });
+    body.appendChild(tr);
+  });
+
+  renderLegend(filtered);
+}
+
+function renderLegend(filtered) {
+  const usedIds = [...new Set(filtered.map(s => s.subjectId))];
+  const leg = document.getElementById('legend');
+  leg.innerHTML = '';
+  usedIds.forEach(id => {
+    const subj = subjects.find(s => s.id === id);
+    if (!subj) return;
+    const color = colorMap[id] || 'color-0';
+    const bgMap = {
+      'color-0':'#bfdbfe','color-1':'#bbf7d0','color-2':'#fde68a',
+      'color-3':'#fbcfe8','color-4':'#ddd6fe','color-5':'#fed7aa',
+      'color-6':'#a5f3fc','color-7':'#bbf7d0'
+    };
+    leg.innerHTML += `
+      <span class="d-flex align-items-center gap-1 small text-muted">
+        <span class="legend-dot" style="background:${bgMap[color]||'#ccc'}"></span>
+        ${subj.name}
+      </span>`;
+  });
+}
+
+// ===== RENDER SUBJECT TABLE =====
+function renderSubjectTable() {
+  const q = document.getElementById('searchSubject').value.toLowerCase();
+  const body = document.getElementById('subjectTableBody');
+  body.innerHTML = '';
+  subjects.filter(s => s.name.toLowerCase().includes(q) || s.code.toLowerCase().includes(q))
+    .forEach((s, i) => {
+      body.innerHTML += `
+        <tr>
+          <td class="text-muted">${i+1}</td>
+          <td><code class="text-primary fw-bold">${s.code}</code></td>
+          <td class="fw-semibold">${s.name}</td>
+          <td><span class="badge bg-light text-dark border">${s.credits} TC</span></td>
+          <td>${s.teacher || '<span class="text-muted">Chưa phân công</span>'}</td>
+          <td>${s.room || '—'}</td>
+          <td><span class="badge bg-info text-dark">${s.class_name || '—'}</span></td>
+          <td>
+            ${s.status === 'active'
+              ? '<span class="badge bg-success">Hoạt động</span>'
+              : '<span class="badge bg-secondary">Tạm dừng</span>'}
+          </td>
+          <td>
+            <button class="btn btn-sm btn-outline-primary rounded-pill me-1" onclick="editSubject(${s.id})"><i class="bi bi-pencil"></i></button>
+            <button class="btn btn-sm btn-outline-danger rounded-pill" onclick="deleteSubject(${s.id})"><i class="bi bi-trash"></i></button>
+          </td>
+        </tr>`;
+    });
+}
+
+// ===== POPULATE SUBJECT SELECT IN MODAL =====
+function populateSubjectSelect() {
+  const sel = document.getElementById('sch_subject');
+  sel.innerHTML = '<option value="">-- Chọn môn học --</option>';
+  subjects.forEach(s => {
+    sel.innerHTML += `<option value="${s.id}">${s.code} - ${s.name}</option>`;
+  });
+}
+
+// ===== SCHEDULE MODAL =====
+function openAddModal(day, slot) {
+  editingScheduleId = null;
+  document.getElementById('scheduleModalTitle').innerHTML = '<i class="bi bi-calendar-plus me-2"></i>Thêm lịch học';
+  populateSubjectSelect();
+  if (day !== undefined) document.getElementById('sch_day').value = day;
+  if (slot !== undefined) document.getElementById('sch_slot').value = slot;
+  document.getElementById('sch_teacher').value = '';
+  document.getElementById('sch_class').value = 'CNTT01';
+  document.getElementById('sch_room').value = '';
+  document.getElementById('sch_note').value = '';
+  document.getElementById('sch_startdate').value = '';
+  document.getElementById('sch_enddate').value = '';
+  new bootstrap.Modal(document.getElementById('scheduleModal')).show();
+}
+
+function viewSchedule(id) {
+  viewingId = id;
+  const s = schedules.find(x => x.id === id);
+  const subj = subjects.find(x => x.id === s.subjectId);
+  document.getElementById('viewModalBody').innerHTML = `
+    <table class="table table-borderless">
+      <tr><td class="text-muted fw-semibold" style="width:140px">Môn học</td><td class="fw-bold">${subj ? subj.name : '?'}</td></tr>
+      <tr><td class="text-muted fw-semibold">Giảng viên</td><td>${s.teacher}</td></tr>
+      <tr><td class="text-muted fw-semibold">Lớp</td><td><span class="badge bg-primary">${s.class}</span></td></tr>
+      <tr><td class="text-muted fw-semibold">Ngày học</td><td>${DAYS[s.day]}</td></tr>
+      <tr><td class="text-muted fw-semibold">Tiết học</td><td>${SLOTS[s.slot].replace('\n',' | ')}</td></tr>
+      <tr><td class="text-muted fw-semibold">Phòng học</td><td><i class="bi bi-geo-alt text-danger"></i> ${s.room}</td></tr>
+    </table>`;
+  document.getElementById('btnEditFromView').onclick = () => {
+    bootstrap.Modal.getInstance(document.getElementById('viewModal')).hide();
+    editSchedule(id);
+  };
+  document.getElementById('btnDeleteFromView').onclick = () => {
+    bootstrap.Modal.getInstance(document.getElementById('viewModal')).hide();
+    deleteSchedule(id);
+  };
+  new bootstrap.Modal(document.getElementById('viewModal')).show();
+}
+
+function editSchedule(id) {
+  editingScheduleId = id;
+  const s = schedules.find(x => x.id === id);
+  document.getElementById('scheduleModalTitle').innerHTML = '<i class="bi bi-pencil me-2"></i>Sửa lịch học';
+  populateSubjectSelect();
+  document.getElementById('sch_subject').value = s.subjectId;
+  document.getElementById('sch_teacher').value = s.teacher_id || '';
+  document.getElementById('sch_class').value = s.class;
+  document.getElementById('sch_day').value = s.day;
+  document.getElementById('sch_slot').value = s.slot;
+  document.getElementById('sch_room').value = s.room;
+  document.getElementById('sch_startdate').value = s.raw.start_date || '';
+  document.getElementById('sch_enddate').value = s.raw.end_date || '';
+  const subj = subjects.find(x => x.id === s.subjectId);
+  if (subj && subj.teacher_id) {
+    document.getElementById('sch_teacher').value = subj.teacher_id;
+  }
+  new bootstrap.Modal(document.getElementById('scheduleModal')).show();
+}
+
+function saveSchedule() {
+  
+  const subjectId = parseInt(document.getElementById('sch_subject').value);
+  const teacher = document.getElementById('sch_teacher').value;
+  const cls = document.getElementById('sch_class').value;
+  const day = parseInt(document.getElementById('sch_day').value);
+  const slot = parseInt(document.getElementById('sch_slot').value);
+  const room = document.getElementById('sch_room').value.trim();
+
+  if (!subjectId || !teacher || !room) {
+    showToast('Vui lòng điền đầy đủ thông tin bắt buộc!', '#ef4444');
+    return;
+  }
+
+  // Build payload for server: map slot -> start_time/end_time and days_of_week
+  function slotToTimes(si) {
+  const times = [
+    ["07:30", "08:20"],
+    ["08:30", "09:20"],
+    ["09:30", "10:20"],
+    ["10:30", "11:20"],
+    ["11:30", "12:20"],
+    ["13:00", "13:50"],
+    ["14:00", "14:50"],
+    ["15:00", "15:50"],
+    ["16:00", "16:50"],
+    ["17:00", "17:50"]
+  ];
+
+  return {
+    start_time: times[si][0],
+    end_time: times[si][1]
+  };
+}
+
+  const times = slotToTimes(slot);
+  const payload = {
+    subject_id: subjectId,
+    class_name: cls,
+    room: room,
+    start_time: times.start_time,
+    end_time: times.end_time,
+    days_of_week: [day],
+    start_date: document.getElementById('sch_startdate').value || null,
+    end_date: document.getElementById('sch_enddate').value || null
+  };
+
+  // If editing, delete existing then add new (server has no PUT for schedules)
+  const doAdd = () => fetch('/api/schedules', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)} )
+    .then(r=>r.json()).then(res=>{
+      if (res.error) { showToast(res.error, '#ef4444'); return; }
+      showToast('Lưu lịch học thành công!', '#10b981');
+      window.location.reload();
+    }).catch(e=>showToast('Lỗi server', '#ef4444'));
+
+  if (editingScheduleId) {
+    fetch(`/api/schedules/${editingScheduleId}`, { method: 'DELETE' })
+      .then(()=> doAdd());
+  } else {
+    doAdd();
+  }
+}
+
+function deleteSchedule(id) {
+  if (!confirm('Bạn có chắc muốn xóa lịch học này?')) return;
+  fetch(`/api/schedules/${id}`, { method: 'DELETE' })
+    .then(r=>r.json()).then(res=>{
+      if (res.error) { showToast(res.error, '#ef4444'); return; }
+      showToast('Đã xóa lịch học!', '#f59e0b');
+      window.location.reload();
+    }).catch(e=>showToast('Lỗi server', '#ef4444'));
+}
+
+// ===== SUBJECT MODAL =====
+function openSubjectModal() {
+  editingSubjectId = null;
+  document.getElementById('subjectModalTitle').innerHTML = '<i class="bi bi-book-half me-2"></i>Thêm môn học mới';
+  ['sub_code','sub_name','sub_room'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('sub_credits').value = 3;
+  document.getElementById('sub_teacher').value = '';
+  document.getElementById('sub_status').value = 'active';
+  new bootstrap.Modal(document.getElementById('subjectModal')).show();
+}
+
+function editSubject(id) {
+  editingSubjectId = id;
+  const s = subjects.find(x => x.id === id);
+  document.getElementById('subjectModalTitle').innerHTML = '<i class="bi bi-pencil me-2"></i>Sửa môn học';
+  document.getElementById('sub_code').value = s.code;
+  document.getElementById('sub_name').value = s.name;
+  document.getElementById('sub_credits').value = s.credits;
+  document.getElementById('sub_teacher').value = s.teacher_id || '';
+  document.getElementById('sub_room').value = s.room;
+  document.getElementById('sub_status').value = s.status;
+  new bootstrap.Modal(document.getElementById('subjectModal')).show();
+}
+
+function saveSubject() {
+  const code = document.getElementById('sub_code').value.trim();
+  const name = document.getElementById('sub_name').value.trim();
+  if (!code || !name) { showToast('Mã môn và Tên môn không được để trống!', '#ef4444'); return; }
+  const payload = {
+    name: name,
+    class_name: document.getElementById('sub_room').value.trim(),
+    teacher_id: document.getElementById('sub_teacher').value || null
+  };
+
+  if (editingSubjectId) {
+    fetch(`/api/subjects/${editingSubjectId}`, {
+      method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
+    }).then(r => r.json()).then(res => {
+      if (res.error) { showToast(res.error, '#ef4444'); return; }
+      showToast('Cập nhật môn học thành công!', '#10b981');
+      window.location.reload();
+    }).catch(e => showToast('Lỗi server', '#ef4444'));
+  } else {
+    payload.code = code;
+    payload.credits = parseInt(document.getElementById('sub_credits').value) || 3;
+    payload.status = document.getElementById('sub_status').value;
+    fetch('/api/subjects', {
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
+    }).then(r => r.json()).then(res => {
+      if (res.error) { showToast(res.error, '#ef4444'); return; }
+      showToast('Thêm môn học thành công!', '#10b981');
+      window.location.reload();
+    }).catch(e => showToast('Lỗi server', '#ef4444'));
+  }
+}
+
+function deleteSubject(id) {
+  if (!confirm('Xóa môn học này? Các lịch học liên quan cũng sẽ bị xóa.')) return;
+  fetch(`/api/subjects/${id}`, { method: 'DELETE' })
+    .then(r => r.json())
+    .then(res => {
+      if (res.error) { showToast(res.error, '#ef4444'); return; }
+      showToast('Đã xóa môn học!', '#f59e0b');
+      window.location.reload();
+    }).catch(e => showToast('Lỗi server', '#ef4444'));
+}
+
+// ===== EXPORT (stub) =====
+function exportExcel() {
+    const className =
+        document.getElementById("filterClass").value;
+
+    if (!className) {
+        alert("Vui lòng chọn lớp");
+        return;
+    }
+
+    window.location.href =
+        `/export_timetable?class_name=${encodeURIComponent(className)}`;
+}
+
+// ===== TOAST =====
+function showToast(msg, color = '#10b981') {
+  const el = document.getElementById('toastMsg');
+  document.getElementById('toastText').textContent = msg;
+  el.style.background = color;
+  const t = new bootstrap.Toast(el, { delay: 3000 });
+  t.show();
+}
+
+// ===== INIT =====
+renderTimetable();
+renderSubjectTable();
+</script>
+</body>
+</html>

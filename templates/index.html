@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin System | Quản lý Đào tạo</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root { --admin-color: #6366f1; --glass-bg: rgba(255,255,255,0.9); }
+
+    body {
+      margin: 0; font-family: 'Segoe UI', sans-serif;
+      background: url("static/images/bg.png") center/cover no-repeat fixed;
+      display: flex; min-height: 100vh;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 260px; background: rgba(15,23,42,0.95);
+      backdrop-filter: blur(10px); color: white;
+      display: flex; flex-direction: column;
+      padding: 1.5rem; position: fixed; height: 100vh; z-index: 1000;
+    }
+    .sidebar-brand { font-size: 1.2rem; font-weight: 800; color: #818cf8; margin-bottom: 2rem; }
+    .nav-link {
+      color: #94a3b8; padding: 12px 15px; border-radius: 10px;
+      margin-bottom: 5px; transition: 0.3s; display: flex; align-items: center;
+    }
+    .nav-link i { margin-right: 12px; font-size: 1.1rem; }
+    .nav-link:hover, .nav-link.active { background: rgba(99,102,241,0.2); color: white; }
+
+    /* MAIN */
+    .main-content { flex: 1; margin-left: 260px; padding: 2rem; }
+
+    .glass-card {
+      background: var(--glass-bg); backdrop-filter: blur(10px);
+      border-radius: 18px; border: 1px solid rgba(255,255,255,0.3);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-bottom: 1.5rem;
+    }
+    .stat-card { text-align: center; padding: 1.5rem; transition: 0.3s; }
+    .stat-card:hover { transform: translateY(-5px); }
+    .stat-icon { font-size: 2rem; margin-bottom: 10px; color: var(--admin-color); }
+    .custom-table thead th {
+      background: rgba(99,102,241,0.1); border: none;
+      padding: 12px; font-size: 0.8rem; text-transform: uppercase;
+    }
+
+    /* OFFCANVAS */
+    #classOffcanvas { width: 780px !important; max-width: 96vw; }
+    #classOffcanvas .offcanvas-header {
+      background: rgba(15,23,42,0.97); color: white;
+      border-bottom: 1px solid rgba(255,255,255,0.08); padding: 1.1rem 1.5rem;
+    }
+    #classOffcanvas .offcanvas-body { background: #f8fafc; padding: 1.5rem; overflow-y: auto; }
+
+    /* PANEL INNER */
+    .panel-back-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: none; border: 1px solid #e2e8f0; border-radius: 8px;
+      padding: 6px 14px; font-size: 13px; color: #64748b;
+      cursor: pointer; margin-bottom: 1.1rem; transition: background 0.15s;
+    }
+    .panel-back-btn:hover { background: #f1f5f9; }
+    .panel-section-title { font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 4px; }
+    .panel-subtitle { font-size: 13px; color: #64748b; margin-bottom: 1.2rem; }
+
+    /* class cards */
+    .class-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(130px,1fr)); gap: 10px; }
+    .class-card {
+      background: white; border: 1px solid #e2e8f0; border-radius: 14px;
+      padding: 1rem; cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s;
+      text-align: center;
+    }
+    .class-card:hover { border-color: var(--admin-color); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .class-card .cc-label { font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing:.05em; margin-bottom:4px; }
+    .class-card .cc-name { font-size: 16px; font-weight: 700; color: #1e293b; }
+    .class-card .cc-count { font-size: 12px; color: #64748b; margin-top: 4px; }
+
+    /* student table */
+    .sv-search {
+      width: 100%; padding: 9px 14px; border: 1px solid #e2e8f0;
+      border-radius: 10px; font-size: 13px; background: white;
+      color: #0f172a; margin-bottom: 10px;
+    }
+    .sv-search:focus { outline: none; border-color: var(--admin-color); }
+
+    .filter-bar { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+    .filter-btn {
+      padding: 5px 13px; border: 1px solid #e2e8f0; border-radius: 20px;
+      font-size: 12px; cursor: pointer; background: white;
+      color: #64748b; transition: 0.15s;
+    }
+    .filter-btn.active { background: var(--admin-color); color: white; border-color: var(--admin-color); }
+
+    .sv-table-wrap { background: white; border-radius: 14px; border: 1px solid #e2e8f0; overflow: hidden; }
+    .sv-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .sv-table thead th {
+      background: #f8fafc; color: #64748b; font-weight: 600;
+      padding: 9px 13px; text-align: left; font-size: 11px;
+      text-transform: uppercase; letter-spacing:.05em;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .sv-table tbody tr { cursor: pointer; transition: background .12s; }
+    .sv-table tbody tr:hover td { background: #f1f5f9; }
+    .sv-table td { padding: 10px 13px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    .sv-table tbody tr:last-child td { border-bottom: none; }
+
+    .bdg { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+    .bdg-p { background: #dcfce7; color: #15803d; }
+    .bdg-a { background: #fee2e2; color: #b91c1c; }
+    .bdg-l { background: #fef9c3; color: #a16207; }
+
+    .rate-bar { height: 6px; background: #f1f5f9; border-radius: 4px; overflow: hidden; display: inline-block; width: 56px; vertical-align: middle; }
+    .rate-fill { height: 100%; border-radius: 4px; }
+
+    /* student detail */
+    .sv-detail-header { background: white; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; margin-bottom: 1rem; }
+    .sv-detail-top { display: flex; align-items: center; gap: 14px; padding: 1.1rem 1.25rem; border-bottom: 1px solid #f1f5f9; }
+    .sv-avatar {
+      width: 46px; height: 46px; border-radius: 50%;
+      background: #e0e7ff; display: flex; align-items: center;
+      justify-content: center; font-weight: 700; font-size: 16px;
+      color: #4338ca; flex-shrink: 0;
+    }
+    .sv-detail-stats { display: grid; grid-template-columns: repeat(4,1fr); }
+    .sv-stat-box { text-align: center; padding: .8rem .5rem; border-right: 1px solid #f1f5f9; }
+    .sv-stat-box:last-child { border-right: none; }
+    .sv-stat-val { font-size: 20px; font-weight: 700; }
+    .sv-stat-lbl { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+
+    .subj-wrap { background: white; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; }
+    .subj-row { display: flex; align-items: center; gap: 12px; padding: 11px 16px; border-bottom: 1px solid #f8fafc; }
+    .subj-row:last-child { border-bottom: none; }
+    .subj-info { flex: 1; min-width: 0; }
+    .subj-name { font-size: 13px; font-weight: 600; color: #1e293b; }
+    .subj-teacher { font-size: 11px; color: #94a3b8; }
+    .subj-badges { display: flex; gap: 5px; align-items: center; }
+    .subj-rate-txt { font-size: 13px; font-weight: 700; min-width: 40px; text-align: right; }
+
+    .empty-msg { text-align: center; padding: 2.5rem; color: #94a3b8; font-size: 13px; }
+
+    /* loading spinner */
+    .panel-loading {
+      display: flex; align-items: center; justify-content: center;
+      padding: 3rem; color: #94a3b8; gap: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar shadow">
+  <div class="sidebar-brand"><i class="bi bi-shield-lock-fill"></i> ADMIN SYSTEM</div>
+  <nav class="nav flex-column">
+    <small class="text-uppercase text-muted fw-bold mb-2" style="font-size:.7rem;">Hệ thống</small>
+    <a href="/dashboard" class="nav-link active"><i class="bi bi-speedometer2"></i> Tổng quan</a>
+    <small class="text-uppercase text-muted fw-bold mt-3 mb-2" style="font-size:.7rem;">Quản lý dữ liệu</small>
+    <a href="/manage_users" class="nav-link"><i class="bi bi-people"></i> Tài khoản</a>
+    <a href="/manage_teachers" class="nav-link"><i class="bi bi-person-badge"></i> Giáo viên</a>
+    <a href="/manage_subjects" class="nav-link"><i class="bi bi-book"></i> Môn học & Lịch</a>
+    <small class="text-uppercase text-muted fw-bold mt-3 mb-2" style="font-size:.7rem;">Báo cáo</small>
+    <a href="/attendance_record" class="nav-link"><i class="bi bi-journal-check"></i> Nhật ký điểm danh</a>
+    <a href="/export_data" class="nav-link"><i class="bi bi-file-earmark-excel"></i> Xuất dữ liệu</a>
+  </nav>
+  <div class="mt-auto">
+    <a href="/logout" class="nav-link text-danger"><i class="bi bi-box-arrow-left"></i> Đăng xuất</a>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main-content">
+  <div class="d-flex justify-content-between align-items-center mb-4 text-white">
+    <h4 class="fw-bold mb-0">Hệ thống Quản lý Học tập</h4>
+    <span>Chào, <strong>{{ user_name or 'Admin' }}</strong> <i class="bi bi-person-circle ms-2"></i></span>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="glass-card stat-card">
+        <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+        <h3 class="fw-bold">{{ student_count }}</h3>
+        <p class="text-muted mb-0">Sinh viên</p>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="glass-card stat-card">
+        <div class="stat-icon"><i class="bi bi-person-video3"></i></div>
+        <h3 class="fw-bold">{{ teacher_count }}</h3>
+        <p class="text-muted mb-0">Giảng viên</p>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="glass-card stat-card">
+        <div class="stat-icon"><i class="bi bi-check-circle-fill text-success"></i></div>
+        <h3 class="fw-bold">{{ attendance_rate }}%</h3>
+        <p class="text-muted mb-0">Chuyên cần hôm nay</p>
+      </div>
+    </div>
+    <!-- <div class="col-md-3">
+      <div class="glass-card stat-card">
+        <div class="stat-icon"><i class="bi bi-cpu-fill text-warning"></i></div>
+        <h3 class="fw-bold">{{ model_status }}</h3>
+        <p class="text-muted mb-0">AI Model Status</p>
+      </div>
+    </div> -->
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-4">
+      <div class="glass-card p-4 h-100 d-flex flex-column">
+        <h5 class="fw-bold mb-3"><i class="bi bi-diagram-3-fill me-2"></i>Danh sách lớp</h5>
+        <p class="small text-muted">Quản lý lớp học, xem sinh viên và thống kê chuyên cần theo từng lớp.</p>
+        <div class="mb-3 text-muted">Tổng số lớp: <strong>{{ class_count }}</strong></div>
+        <button class="btn w-100 fw-bold mt-auto"
+                style="background-color:var(--admin-color);color:white;"
+                onclick="openClassPanel()">
+          <i class="bi bi-eye-fill"></i> XEM DANH SÁCH LỚP
+        </button>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="glass-card p-4">
+        <h5 class="fw-bold mb-3"><i class="bi bi-robot me-2"></i>AI Training</h5>
+        <p class="small text-muted">Mô hình AI sẽ tự động cập nhật khi bạn thêm sinh viên mới.</p>
+        <button id="btnTriggerTrain" class="btn w-100 fw-bold" style="background-color:var(--admin-color);color:white;" onclick="triggerModelTrain()">
+          <i class="bi bi-arrow-repeat"></i> KÍCH HOẠT TRAIN LẠI
+        </button>
+        <div class="mt-3 small text-muted">
+          <div id="trainStatusText">Trạng thái: chưa kiểm tra</div>
+          <div class="progress mt-2" style="height:6px;">
+            <div id="trainProgressBar" class="progress-bar bg-success" role="progressbar" style="width: 0%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <div class="glass-card p-4">
+        <h5 class="fw-bold mb-4">Hoạt động điểm danh mới nhất</h5>
+        <div class="table-responsive">
+          <table class="table custom-table align-middle">
+            <thead>
+              <tr><th>Sinh viên</th><th>Môn học</th><th>Giảng viên</th><th>Thời gian</th><th>Trạng thái</th></tr>
+            </thead>
+            <tbody>
+              {% if latest_attendance %}
+                {% for item in latest_attendance %}
+                  <tr>
+                    <td><strong>{{ item.student_name or 'N/A' }}</strong></td>
+                    <td>{{ item.subject_name or '-' }}</td>
+                    <td>{{ item.teacher_name or '-' }}</td>
+                    <td>{{ item.time or '-' }}</td>
+                    <td>
+                      {% if item.status == 'Present' %}
+                        <span class="badge bg-success">Thành công</span>
+                      {% elif item.status == 'Late' %}
+                        <span class="badge bg-warning text-dark">Trễ</span>
+                      {% elif item.status == 'Absent' %}
+                        <span class="badge bg-danger">Vắng</span>
+                      {% else %}
+                        <span class="badge bg-secondary">{{ item.status }}</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td colspan="5" class="text-center text-muted py-4">Chưa có dữ liệu điểm danh mới.</td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function setTrainStatus(status, progress, message) {
+  const statusText = document.getElementById('trainStatusText');
+  const progressBar = document.getElementById('trainProgressBar');
+  const btn = document.getElementById('btnTriggerTrain');
+  if (statusText) {
+    statusText.textContent = `Trạng thái: ${message || (status ? 'Đang huấn luyện' : 'Sẵn sàng')}`;
+  }
+  if (progressBar) {
+    progressBar.style.width = `${progress || 0}%`;
+  }
+  if (btn) {
+    btn.disabled = Boolean(status);
+    btn.innerHTML = status
+      ? '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Đang huấn luyện...'
+      : '<i class="bi bi-arrow-repeat"></i> KÍCH HOẠT TRAIN LẠI';
+  }
+}
+
+async function updateTrainStatusIndicator() {
+  try {
+    const resp = await fetch('/train_status');
+    const data = await resp.json();
+    setTrainStatus(data.running, data.progress, data.message || (data.running ? 'Đang huấn luyện...' : 'Sẵn sàng'));
+  } catch (error) {
+    const statusText = document.getElementById('trainStatusText');
+    if (statusText) {
+      statusText.textContent = 'Trạng thái: không thể kết nối đến server';
+    }
+  }
+}
+
+async function triggerModelTrain() {
+  const btn = document.getElementById('btnTriggerTrain');
+  if (!btn) return;
+
+  btn.disabled = true;
+  setTrainStatus(true, 0, 'Đang gửi yêu cầu huấn luyện...');
+
+  try {
+    const resp = await fetch('/train_model');
+    const data = await resp.json().catch(() => ({}));
+    if (resp.ok) {
+      setTrainStatus(true, 0, 'Đang huấn luyện...');
+    } else if (resp.status === 202) {
+      setTrainStatus(true, data.progress || 0, data.message || 'Đang huấn luyện...');
+    } else {
+      setTrainStatus(false, 0, data.error || data.message || 'Không thể kích hoạt huấn luyện.');
+      alert(data.error || data.message || 'Không thể kích hoạt huấn luyện.');
+    }
+  } catch (error) {
+    setTrainStatus(false, 0, 'Lỗi kết nối máy chủ');
+    alert('Lỗi khi gọi train_model: ' + (error.message || error));
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  updateTrainStatusIndicator();
+  setInterval(updateTrainStatusIndicator, 5000);
+});
+</script>
+
+<!-- OFFCANVAS -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="classOffcanvas">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title fw-bold" id="classOffcanvasLabel">
+      <i class="bi bi-diagram-3-fill me-2"></i>
+      <span id="panelTitle">Danh sách lớp</span>
+    </h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body" id="panelBody"></div>
+</div>
+
+
+<script>
+/* =========================================================
+   HELPERS
+   ========================================================= */
+function rateColor(r) { return r >= 80 ? "#16a34a" : r >= 60 ? "#d97706" : "#dc2626"; }
+function initials(name) { return name.split(" ").slice(-2).map(w => w[0]).join("").toUpperCase(); }
+function loading() {
+  document.getElementById("panelBody").innerHTML = `
+    <div class="panel-loading">
+      <div class="spinner-border spinner-border-sm" role="status"></div>
+      <span>Đang tải dữ liệu...</span>
+    </div>`;
+}
+
+/* =========================================================
+   TRẠNG THÁI PANEL
+   ========================================================= */
+let _panel = { view: "classes", className: null, students: [], selected: null, filter: "all" };
+
+function openClassPanel() {
+  _panel = { view: "classes", className: null, students: [], selected: null, filter: "all" };
+  const oc = new bootstrap.Offcanvas(document.getElementById("classOffcanvas"));
+  oc.show();
+  renderClasses();
+}
+
+/* =========================================================
+   VIEW 1 — DANH SÁCH LỚP (từ API)
+   ========================================================= */
+async function renderClasses() {
+  document.getElementById("panelTitle").textContent = "Danh sách lớp";
+  loading();
+
+  try {
+    const resp = await fetch("/api/admin/classes");
+    const classes = await resp.json();
+
+    if (!classes.length) {
+      document.getElementById("panelBody").innerHTML =
+        '<div class="empty-msg">Chưa có lớp nào trong hệ thống</div>';
+      return;
+    }
+
+    document.getElementById("panelBody").innerHTML = `
+      <div class="panel-section-title">Chọn lớp để xem chuyên cần</div>
+      <div class="panel-subtitle">${classes.length} lớp trong hệ thống</div>
+      <div class="class-grid">
+        ${classes.map(c => `
+          <div class="class-card" onclick="selectClass('${c.class_name}', ${c.count})">
+            <div class="cc-label">Lớp</div>
+            <div class="cc-name">${c.class_name}</div>
+            <div class="cc-count"><i class="bi bi-people-fill"></i> ${c.count} sv</div>
+          </div>
+        `).join("")}
+      </div>`;
+  } catch (e) {
+    document.getElementById("panelBody").innerHTML =
+      '<div class="empty-msg text-danger">Lỗi tải danh sách lớp</div>';
+  }
+}
+
+/* =========================================================
+   VIEW 2 — SINH VIÊN TRONG LỚP (từ API)
+   ========================================================= */
+async function selectClass(className, count) {
+  _panel.className = className;
+  _panel.filter    = "all";
+  _panel.view      = "students";
+  document.getElementById("panelTitle").textContent = "Lớp " + className;
+  loading();
+
+  try {
+    const resp = await fetch(`/api/admin/class/${encodeURIComponent(className)}/students`);
+    _panel.students = await resp.json();
+    renderStudents();
+  } catch (e) {
+    document.getElementById("panelBody").innerHTML =
+      '<div class="empty-msg text-danger">Lỗi tải danh sách sinh viên</div>';
+  }
+}
+
+function setFilter(f) {
+  _panel.filter = f;
+  renderStudents(document.getElementById("svSearch")?.value || "");
+}
+
+function renderStudents(search = "") {
+  document.getElementById("panelTitle").textContent = "Lớp " + _panel.className;
+
+  let rows = [..._panel.students];
+  if (_panel.filter === "good")    rows = rows.filter(s => s.rate >= 80);
+  if (_panel.filter === "warning") rows = rows.filter(s => s.rate >= 60 && s.rate < 80);
+  if (_panel.filter === "danger")  rows = rows.filter(s => s.rate < 60);
+  if (search) {
+    const q = search.toLowerCase();
+    rows = rows.filter(s => s.name.toLowerCase().includes(q) || s.code.includes(q));
+  }
+
+  const filterLabels = { all: "Tất cả", good: "Tốt ≥80%", warning: "60–79%", danger: "< 60%" };
+
+  document.getElementById("panelBody").innerHTML = `
+    <button class="panel-back-btn" onclick="renderClasses()">
+      <i class="bi bi-arrow-left"></i> Danh sách lớp
+    </button>
+    <div class="panel-section-title">Lớp ${_panel.className}</div>
+    <div class="panel-subtitle">${_panel.students.length} sinh viên · chuyên cần tổng quan</div>
+    <div class="d-flex flex-wrap gap-2 mb-3">
+      <button class="btn btn-sm btn-success" onclick="downloadClassAttendance()">
+        <i class="bi bi-file-earmark-excel-fill me-1"></i> Xuất Excel
+      </button>
+      <div class="text-muted align-self-center" style="font-size:0.85rem;">Xuất danh sách điểm danh của lớp</div>
+    </div>
+
+    <input id="svSearch" class="sv-search" placeholder="Tìm tên hoặc mã sinh viên…"
+           value="${search}" oninput="renderStudents(this.value)" />
+
+    <div class="filter-bar">
+      ${["all","good","warning","danger"].map(f => `
+        <button class="filter-btn${_panel.filter === f ? " active" : ""}"
+                onclick="setFilter('${f}')">${filterLabels[f]}</button>
+      `).join("")}
+    </div>
+
+    <div class="sv-table-wrap">
+      <table class="sv-table">
+        <thead>
+          <tr>
+            <th>Mã SV</th><th>Họ và tên</th>
+            <th>Có mặt</th><th>Vắng</th><th>Trễ</th><th>Tỉ lệ</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.length === 0
+            ? `<tr><td colspan="6"><div class="empty-msg">Không có sinh viên nào</div></td></tr>`
+            : rows.map(s => `
+              <tr onclick="selectStudent(${s.id})">
+                <td style="font-size:12px;color:#94a3b8;">${s.code}</td>
+                <td style="font-weight:600;">${s.name}</td>
+                <td><span class="bdg bdg-p">${s.present}</span></td>
+                <td><span class="bdg bdg-a">${s.absent}</span></td>
+                <td><span class="bdg bdg-l">${s.late}</span></td>
+                <td>
+                  <span style="font-size:13px;font-weight:700;color:${rateColor(s.rate)};margin-right:6px;">${s.rate}%</span>
+                  <span class="rate-bar">
+                    <span class="rate-fill" style="width:${s.rate}%;background:${rateColor(s.rate)};display:block;height:100%;"></span>
+                  </span>
+                </td>
+              </tr>`).join("")}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function downloadClassAttendance() {
+  if (!_panel.className) return;
+  window.location.href = `/download_class_csv/${encodeURIComponent(_panel.className)}`;
+}
+
+/* =========================================================
+   VIEW 3 — CHI TIẾT SINH VIÊN THEO MÔN (từ API)
+   ========================================================= */
+async function selectStudent(sid) {
+  const s = _panel.students.find(x => x.id === sid);
+  if (!s) return;
+  _panel.selected = s;
+  _panel.view = "detail";
+  document.getElementById("panelTitle").textContent = s.name;
+  loading();
+
+  try {
+    const resp = await fetch(`/api/admin/student/${sid}/subjects`);
+    const subjects = await resp.json();
+    renderDetail(s, subjects);
+  } catch (e) {
+    document.getElementById("panelBody").innerHTML =
+      '<div class="empty-msg text-danger">Lỗi tải chi tiết sinh viên</div>';
+  }
+}
+
+function renderDetail(s, subjects) {
+  const avgRate = subjects.length
+    ? Math.round(subjects.reduce((a, b) => a + b.rate, 0) / subjects.length)
+    : s.rate;
+
+  document.getElementById("panelBody").innerHTML = `
+    <button class="panel-back-btn" onclick="renderStudents()">
+      <i class="bi bi-arrow-left"></i> Lớp ${_panel.className}
+    </button>
+    <div class="panel-section-title">Chi tiết chuyên cần theo môn</div>
+    <div class="panel-subtitle" style="margin-bottom:1rem;">${s.name} · ${s.code}</div>
+
+    <div class="sv-detail-header" style="margin-bottom:1rem;">
+      <div class="sv-detail-top">
+        <div class="sv-avatar">${initials(s.name)}</div>
+        <div style="flex:1;">
+          <div style="font-size:15px;font-weight:700;color:#0f172a;">${s.name}</div>
+          <div style="font-size:12px;color:#94a3b8;">${s.code} · Lớp ${_panel.className}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:24px;font-weight:700;color:${rateColor(avgRate)};">${avgRate}%</div>
+          <div style="font-size:11px;color:#94a3b8;">tỉ lệ trung bình</div>
+        </div>
+      </div>
+      <div class="sv-detail-stats">
+        <div class="sv-stat-box">
+          <div class="sv-stat-val" style="color:#16a34a;">${s.present}</div>
+          <div class="sv-stat-lbl">Có mặt</div>
+        </div>
+        <div class="sv-stat-box">
+          <div class="sv-stat-val" style="color:#dc2626;">${s.absent}</div>
+          <div class="sv-stat-lbl">Vắng</div>
+        </div>
+        <div class="sv-stat-box">
+          <div class="sv-stat-val" style="color:#d97706;">${s.late}</div>
+          <div class="sv-stat-lbl">Trễ</div>
+        </div>
+        <div class="sv-stat-box">
+          <div class="sv-stat-val">${s.total}</div>
+          <div class="sv-stat-lbl">Tổng buổi</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="font-size:14px;font-weight:700;color:#0f172a;margin-bottom:.65rem;">
+      Chuyên cần từng môn học
+    </div>
+    <div class="subj-wrap">
+      ${subjects.length === 0
+        ? '<div class="empty-msg">Chưa có dữ liệu điểm danh</div>'
+        : subjects.map(sub => `
+          <div class="subj-row">
+            <div class="subj-info">
+              <div class="subj-name">${sub.subject_name}</div>
+              <div class="subj-teacher">${sub.teacher_name}</div>
+              <div class="rate-bar" style="width:100%;margin-top:5px;">
+                <div class="rate-fill" style="width:${sub.rate}%;background:${rateColor(sub.rate)};display:block;height:100%;border-radius:4px;"></div>
+              </div>
+            </div>
+            <div class="subj-badges">
+              <span class="bdg bdg-p" title="Có mặt">${sub.present}</span>
+              <span class="bdg bdg-a" title="Vắng">${sub.absent}</span>
+              <span class="bdg bdg-l" title="Trễ">${sub.late}</span>
+              <span class="subj-rate-txt" style="color:${rateColor(sub.rate)};">${sub.rate}%</span>
+            </div>
+          </div>`).join("")}
+    </div>`;
+}
+</script>
+
+</body>
+</html>

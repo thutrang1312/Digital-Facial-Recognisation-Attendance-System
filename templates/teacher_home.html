@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Teacher Dashboard | Digital Attendance</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+  <style>
+    :root {
+      --primary-teal: #0d9488;
+      --glass-bg: rgba(255, 255, 255, 0.92);
+    }
+
+    html, body {
+      height: 100%; margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: url("static/images/bg.png") center/cover no-repeat fixed;
+      display: flex; justify-content: center;
+    }
+
+    .right-panel { width: 100%; max-width: 1100px; padding: 1.5rem; min-height: 100vh; }
+
+    .nav-gradient {
+      background: linear-gradient(90deg, #0f172a, var(--primary-teal));
+      border-radius: 12px; margin-bottom: 20px;
+    }
+
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    .section-title { font-weight: 700; color: var(--primary-teal); margin-bottom: 15px; }
+
+    .custom-table { width: 100%; border-spacing: 0 8px; border-collapse: separate; }
+    .custom-table thead th { background: rgba(13, 148, 136, 0.1); padding: 12px; border: none; font-size: 0.85rem; }
+    .custom-table tbody tr { background: white; transition: 0.3s; }
+    .custom-table tbody tr:hover { transform: scale(1.01); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+    .custom-table td { padding: 15px 12px; border: none; vertical-align: middle; }
+    .custom-table tbody tr td:first-child { border-radius: 10px 0 0 10px; }
+    .custom-table tbody tr td:last-child { border-radius: 0 10px 10px 0; }
+
+    .badge-room { background: #f1f5f9; color: #475569; padding: 4px 8px; border-radius: 6px; font-weight: 600; }
+
+    /* Mode toggle */
+    .mode-toggle .btn { border-radius: 20px; font-size: 0.8rem; }
+    .mode-toggle .btn.active { background-color: var(--primary-teal); color: white; border-color: var(--primary-teal); }
+
+    /* Badge thủ công */
+    .badge-manual { background: #fef3c7; color: #92400e; font-size: 0.68rem; padding: 2px 6px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+<div class="right-panel">
+  <nav class="navbar navbar-dark nav-gradient shadow-sm px-3">
+    <div class="container-fluid">
+      <span class="navbar-brand fw-bold"><i class="bi bi-person-workspace"></i> TEACHER HOME</span>
+      <div class="ms-auto d-flex align-items-center">
+        <span class="text-white me-3">Chào Giảng viên, <strong>{{ teacher.name }}</strong></span>
+        <a class="btn btn-sm btn-outline-light rounded-pill" href="/logout">Đăng xuất</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid">
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="card glass-card p-3 text-center">
+          <h6 class="text-muted">Lớp dạy hôm nay</h6>
+          <h3 class="fw-bold text-primary">{{today_classes}}</h3>
+        </div>
+      </div>
+
+      <div class="col-12 mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+
+        <h5 class="fw-bold text-white mb-0">
+            <i class="bi bi-calendar-check me-2"></i>
+            LỊCH GIẢNG DẠY TRONG TUẦN
+        </h5>
+
+        <div class="d-flex align-items-center gap-2">
+
+            <a href="?week={{ week_offset - 1 }}"
+              class="btn btn-sm btn-light rounded-pill px-3">
+                ← Tuần trước
+            </a>
+
+            <span class="badge bg-success rounded-pill px-3 py-2">
+                {{ start_week.strftime('%d/%m') }}
+                -
+                {{ end_week.strftime('%d/%m/%Y') }}
+            </span>
+
+            <a href="?week={{ week_offset + 1 }}"
+              class="btn btn-sm btn-light rounded-pill px-3">
+                Tuần sau →
+            </a>
+
+            {% if week_offset != 0 %}
+            <a href="?week=0"
+              class="btn btn-sm btn-outline-light rounded-pill px-3">
+                Hôm nay
+            </a>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+        {% set day_labels = {0: 'Thứ Hai', 1: 'Thứ Ba', 2: 'Thứ Tư', 3: 'Thứ Năm', 4: 'Thứ Sáu', 5: 'Thứ Bảy', 6: 'Chủ Nhật'} %}
+        {% for day_code in [0, 1, 2, 3, 4, 5, 6] %}
+        <div class="glass-card p-3 mb-3">
+          <div class="section-title d-flex justify-content-between">
+            <span><i class="bi bi-clock-history me-2"></i>{{ day_labels[day_code] }}</span>
+            {% if day_code == today_code %}<span class="badge bg-success">HÔM NAY DẠY</span>{% endif %}
+          </div>
+          <div class="table-responsive">
+            <table class="custom-table mb-0">
+              {% if timetable[day_code] %}
+              <thead>
+                <tr>
+                  <th width="35%">Tên học phần</th>
+                  <th width="15%">Lớp</th>
+                  <th width="15%">Phòng</th>
+                  <th width="20%">Thời gian</th>
+                  <th width="15%">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in timetable[day_code] %}
+                <tr>
+                  <td class="fw-bold">{{ item.subject_name }}</td>
+                  <td><span class="badge bg-info text-dark">{{ item.class_name }}</span></td>
+                  <td><span class="badge-room">{{ item.room }}</span></td>
+                  <td>{{ item.start_time }} - {{ item.end_time }}</td>
+                  <td>
+                    <!-- ✅ FIX 1: thêm dấu > đóng đúng chỗ, truyền thêm start_time -->
+                    <button class="btn btn-sm btn-teal text-white rounded-pill px-3"
+                            style="background-color: var(--primary-teal);"
+                            onclick="openClassDetail('{{ item.schedule_id }}', '{{ item.subject_name }}', '{{ item.class_name }}', '{{ item.start_time }}')">
+                      Xem danh sách
+                    </button>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+              {% else %}
+              <tbody><tr><td class="text-muted small italic">Không có tiết dạy</td></tr></tbody>
+              {% endif %}
+            </table>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL ===================== -->
+<div class="modal fade" id="classModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content glass-card border-0">
+
+      <div class="modal-header border-0"
+           style="background:linear-gradient(90deg,#0f172a,#0d9488); border-radius:18px 18px 0 0;">
+        <div>
+          <h5 class="modal-title fw-bold text-white" id="modalTitle">Tên môn học</h5>
+          <small class="text-white opacity-75" id="modalClass">Lớp: ...</small>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <!-- TABS -->
+        <ul class="nav nav-pills mb-3" role="tablist">
+          <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#pills-students">
+              <i class="bi bi-people-fill me-1"></i>Danh sách lớp
+            </button>
+          </li>
+          
+        </ul>
+
+        <div class="tab-content">
+
+          <!-- TAB: DANH SÁCH -->
+          <div class="tab-pane fade show active" id="pills-students">
+
+            <!-- Summary bar -->
+            <div class="d-flex gap-2 flex-wrap mb-3">
+              <div class="px-3 py-2 rounded-3 text-center flex-fill" style="background:#f1f5f9; min-width:70px">
+                <div class="fw-bold text-dark fs-5" id="summary-total">—</div>
+                <div class="text-muted" style="font-size:0.72rem">Tổng SV</div>
+              </div>
+              <div class="px-3 py-2 rounded-3 text-center flex-fill" style="background:#dcfce7; min-width:70px">
+                <div class="fw-bold text-success fs-5" id="summary-present">—</div>
+                <div class="text-success" style="font-size:0.72rem">Có mặt</div>
+              </div>
+              <div class="px-3 py-2 rounded-3 text-center flex-fill" style="background:#fee2e2; min-width:70px">
+                <div class="fw-bold text-danger fs-5" id="summary-absent">—</div>
+                <div class="text-danger" style="font-size:0.72rem">Vắng</div>
+              </div>
+              <div class="px-3 py-2 rounded-3 text-center flex-fill" style="background:#fef9c3; min-width:70px">
+                <div class="fw-bold text-warning fs-5" id="summary-late">—</div>
+                <div class="text-warning" style="font-size:0.72rem">Trễ</div>
+              </div>
+              <!-- Chưa lưu badge -->
+              <div class="px-3 py-2 rounded-3 text-center flex-fill" style="background:#ede9fe; min-width:70px; display:none" id="summary-changed-box">
+                <div class="fw-bold text-purple fs-5" id="summary-changed" style="color:#7c3aed">—</div>
+                <div style="font-size:0.72rem; color:#7c3aed">Chưa lưu</div>
+              </div>
+            </div>
+
+            <!-- Mode toggle -->
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <p class="text-muted small mb-0">
+                <i class="bi bi-info-circle me-1"></i>
+                Chỉnh trạng thái rồi nhấn <strong>Lưu</strong> — hệ thống ghi nhận là điều chỉnh thủ công.
+              </p>
+              <div class="mode-toggle btn-group btn-group-sm" role="group">
+                <button class="btn btn-outline-secondary active" id="btn-mode-view" onclick="switchMode('view')">
+                  <i class="bi bi-eye me-1"></i>Xem
+                </button>
+                <button class="btn btn-outline-secondary" id="btn-mode-edit" onclick="switchMode('edit')">
+                  <i class="bi bi-pencil me-1"></i>Chỉnh sửa
+                </button>
+              </div>
+            </div>
+
+            <!-- Table -->
+            <div class="table-responsive" style="max-height:380px; overflow-y:auto">
+              <table class="table table-hover align-middle mb-0" style="font-size:0.85rem">
+                <thead class="sticky-top" style="background:#f8fafc">
+                  <tr>
+                    <th style="width:40px">#</th>
+                    <th>Sinh viên</th>
+                    <th class="text-center">Hôm nay</th>
+                    <th class="text-center"><span class="text-success">Có mặt</span></th>
+                    <th class="text-center">
+                      <span class="text-danger">Vắng</span>&nbsp;/&nbsp;<span class="text-warning">Trễ</span>
+                    </th>
+                    <th style="min-width:130px">Chuyên cần</th>
+                    <th class="col-edit text-center" style="display:none; min-width:160px">Ghi chú</th>
+                    <th class="col-edit text-center" style="display:none; width:80px">Lưu</th>
+                  </tr>
+                </thead>
+                <tbody id="student-list-body"></tbody>
+              </table>
+            </div>
+
+            <!-- Nút lưu tất cả (chỉ hiện edit mode) -->
+            <div class="col-edit d-flex justify-content-end gap-2 mt-3 border-top pt-3" style="display:none !important">
+              <button class="btn btn-sm btn-outline-secondary" onclick="resetChanges()">
+                <i class="bi bi-arrow-counterclockwise me-1"></i>Hủy thay đổi
+              </button>
+              <button class="btn btn-sm text-white" id="save-all-btn"
+                      style="background-color: var(--primary-teal);"
+                      onclick="saveAllAttendance()">
+                <i class="bi bi-save me-1"></i>Lưu tất cả
+              </button>
+            </div>
+
+          </div><!-- /tab students -->
+
+          
+
+        </div><!-- /tab-content -->
+      </div><!-- /modal-body -->
+    </div>
+  </div>
+</div>
+
+<!-- ===================== SCRIPT ===================== -->
+<script>
+let attendanceData = {};
+let changedRows = new Set();
+let currentScheduleId = null;
+let currentMode = 'view'; // 'view' | 'edit'
+
+// ── Mở modal ──────────────────────────────────────────
+async function openClassDetail(scheduleId, subjectName, className, startTime) {
+  currentScheduleId = scheduleId;
+  changedRows.clear();
+  currentMode = 'view';
+
+  document.getElementById('modalTitle').innerText = subjectName;
+  document.getElementById('modalClass').innerText = 'Lớp: ' + className;
+
+  const listBody = document.getElementById('student-list-body');
+  listBody.innerHTML = '<tr><td colspan="8" class="text-center">Đang tải danh sách...</td></tr>';
+
+  // ✅ FIX 2: Chỉ disable nút "Chỉnh sửa" bên trong modal, không ảnh hưởng nút "Xem danh sách"
+  const editBtn = document.getElementById('btn-mode-edit');
+  if (startTime) {
+    const [sh, sm] = startTime.split(':').map(Number);
+    const allowedFrom = new Date();
+    allowedFrom.setHours(sh, sm + 15, 0, 0);
+
+    const canEdit = new Date() >= allowedFrom;
+    editBtn.disabled = !canEdit;
+    editBtn.title = canEdit
+      ? ''
+      : `Chỉ có thể chỉnh sửa sau ${String(allowedFrom.getHours()).padStart(2,'0')}:${String(allowedFrom.getMinutes()).padStart(2,'0')}`;
+  } else {
+    editBtn.disabled = false;
+    editBtn.title = '';
+  }
+
+  applyModeUI();
+
+  const myModal = new bootstrap.Modal(document.getElementById('classModal'));
+  myModal.show();
+
+  try {
+    const resp = await fetch(`/api/manual_attendance/${scheduleId}`);
+    const data = await resp.json();
+
+    attendanceData = {};
+    data.forEach(s => { attendanceData[s.student_code] = { ...s }; });
+
+    renderTable(data);
+    updateSummary();
+  } catch (e) {
+    listBody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Lỗi nạp dữ liệu</td></tr>';
+  }
+}
+
+// ── Render bảng ────────────────────────────────────────
+function renderTable(students) {
+  const body = document.getElementById('student-list-body');
+  if (!students || students.length === 0) {
+    body.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Không có sinh viên</td></tr>';
+    return;
+  }
+
+  body.innerHTML = students.map((s, i) => {
+    const rate = s.rate ?? 0;
+    const rateColor = rate >= 80 ? 'success' : rate >= 50 ? 'warning' : 'danger';
+
+    const statusOptions = ['Present', 'Late', 'Absent'];
+    const statusLabels  = { Present: 'Có mặt', Late: 'Đi muộn', Absent: 'Vắng' };
+    const todayBadge = {
+      Present: '<span class="badge bg-success">Có mặt</span>',
+      Late:    '<span class="badge bg-warning text-dark">Trễ</span>',
+      Absent:  '<span class="badge bg-secondary">Vắng</span>',
+    }[s.today_status] || '<span class="badge bg-secondary">Vắng</span>';
+
+    // ✅ FIX 3: Xóa comment lẫn trong template string, thêm dấu > đúng chỗ
+    const selectHtml = `
+      <select class="form-select form-select-sm status-select" style="width:110px"
+              data-code="${s.student_code}"
+              onchange="markChanged('${s.student_code}', 'today_status', this.value)">
+        ${statusOptions.map(v =>
+          `<option value="${v}" ${s.today_status === v ? 'selected' : ''}>${statusLabels[v]}</option>`
+        ).join('')}
+      </select>`;
+
+    return `
+      <tr id="row-${s.student_code}">
+        <td class="text-muted small">${i + 1}</td>
+        <td>
+          <div class="fw-bold text-dark" style="font-size:0.88rem">${s.name}</div>
+          <div class="text-muted" style="font-size:0.75rem">${s.student_code}</div>
+          ${s.is_manual ? '<span class="badge-manual">thủ công</span>' : ''}
+        </td>
+
+        <td class="text-center">
+          <span class="td-view">${todayBadge}</span>
+          <span class="td-edit" style="display:none">${selectHtml}</span>
+        </td>
+
+        <td class="text-center">
+          <span class="text-success fw-bold">${s.present_count}</span>
+          <span class="text-muted small"> / ${s.total_sessions}</span>
+        </td>
+        <td class="text-center">
+          <span class="text-danger fw-bold">${s.absent_count}</span>
+          &nbsp;
+          <span class="text-warning fw-bold">${s.late_count}</span>
+        </td>
+        <td style="min-width:120px">
+          <div class="d-flex align-items-center gap-2">
+            <div class="progress flex-grow-1" style="height:8px; border-radius:99px">
+              <div class="progress-bar bg-${rateColor}" style="width:${rate}%; transition:width .5s ease"></div>
+            </div>
+            <span class="fw-bold text-${rateColor}" style="font-size:0.78rem; min-width:34px">${rate}%</span>
+          </div>
+          <div style="font-size:0.68rem; color:#94a3b8; margin-top:2px">
+            ${s.present_count}×1 + ${s.late_count}×0.75 / ${s.total_sessions}
+          </div>
+          ${rate < 50 ? '<div style="font-size:0.68rem; color:#dc2626">⚠ Nguy cơ cấm thi</div>' : ''}
+        </td>
+
+        <td class="col-edit" style="display:none">
+          <input type="text" class="form-control form-control-sm" style="min-width:140px"
+                 placeholder="Ghi chú lý do..." value="${s.note || ''}"
+                 oninput="markChanged('${s.student_code}', 'note', this.value)">
+        </td>
+
+        <td class="col-edit text-center" style="display:none">
+          <button class="btn btn-sm ${s.is_manual ? 'btn-success' : 'btn-outline-secondary'}"
+                  id="save-btn-${s.student_code}"
+                  onclick="saveSingleAttendance('${s.student_code}')">
+            <i class="bi bi-save"></i>
+          </button>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+// ── Chuyển chế độ ──────────────────────────────────────
+function switchMode(mode) {
+  currentMode = mode;
+  applyModeUI();
+}
+
+function applyModeUI() {
+  const isEdit = currentMode === 'edit';
+
+  document.getElementById('btn-mode-view').classList.toggle('active', !isEdit);
+  document.getElementById('btn-mode-edit').classList.toggle('active', isEdit);
+
+  document.querySelectorAll('.col-edit').forEach(el => {
+    el.style.display = isEdit ? '' : 'none';
+  });
+
+  document.querySelectorAll('.td-view').forEach(el => el.style.display = isEdit ? 'none' : '');
+  document.querySelectorAll('.td-edit').forEach(el => el.style.display = isEdit ? '' : 'none');
+
+  const saveAllRow = document.querySelector('.col-edit.d-flex');
+  if (saveAllRow) saveAllRow.style.display = isEdit ? 'flex' : 'none';
+}
+
+// ── Đánh dấu thay đổi ─────────────────────────────────
+function markChanged(code, field, value) {
+  if (attendanceData[code]) {
+    attendanceData[code][field] = value;
+    changedRows.add(code);
+  }
+  const btn = document.getElementById(`save-btn-${code}`);
+  if (btn) { btn.className = 'btn btn-sm btn-outline-primary'; }
+  updateSummary();
+}
+
+// ── Cập nhật summary ───────────────────────────────────
+function updateSummary() {
+  const all = Object.values(attendanceData);
+  document.getElementById('summary-total').innerText   = all.length;
+  document.getElementById('summary-present').innerText = all.filter(s => s.today_status === 'Present').length;
+  document.getElementById('summary-absent').innerText  = all.filter(s => s.today_status === 'Absent').length;
+  document.getElementById('summary-late').innerText    = all.filter(s => s.today_status === 'Late').length;
+
+  const changedBox = document.getElementById('summary-changed-box');
+  if (changedRows.size > 0) {
+    changedBox.style.display = '';
+    document.getElementById('summary-changed').innerText = changedRows.size;
+  } else {
+    changedBox.style.display = 'none';
+  }
+}
+
+// ── Lưu 1 sinh viên ────────────────────────────────────
+async function saveSingleAttendance(code) {
+  const s = attendanceData[code];
+  try {
+    const res = await fetch('/api/attendance/manual', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        schedule_id: currentScheduleId,
+        student_code: code,
+        status: s.today_status,
+        note: s.note || '',
+        is_manual: true
+      })
+    });
+
+    if (res.status === 403) {
+      const err = await res.json();
+      alert(err.error);
+      return;
+    }
+
+    if (!res.ok) {
+      alert('Lỗi lưu điểm danh. Vui lòng thử lại.');
+      return;
+    }
+
+    attendanceData[code].is_manual = true;
+    changedRows.delete(code);
+
+    const btn = document.getElementById(`save-btn-${code}`);
+    if (btn) { btn.className = 'btn btn-sm btn-success'; btn.innerHTML = '<i class="bi bi-check-lg"></i>'; }
+
+    const row = document.getElementById(`row-${code}`);
+    if (row) {
+      const nameTd = row.querySelector('td:nth-child(2)');
+      if (nameTd && !nameTd.querySelector('.badge-manual')) {
+        nameTd.innerHTML += '<span class="badge-manual">thủ công</span>';
+      }
+    }
+    updateSummary();
+
+  } catch (e) {
+    alert('Lỗi lưu điểm danh. Vui lòng thử lại.');
+  }
+}
+
+// ── Lưu tất cả ────────────────────────────────────────
+async function saveAllAttendance() {
+  if (changedRows.size === 0) return;
+
+  const payload = [...changedRows].map(code => ({
+    schedule_id: currentScheduleId,
+    student_code: code,
+    status: attendanceData[code].today_status,
+    note: attendanceData[code].note || '',
+    is_manual: true
+  }));
+
+  try {
+    const res = await fetch('/api/attendance/manual/bulk', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (res.status === 403) {
+      const err = await res.json();
+      alert(err.error);
+      return;
+    }
+
+    if (!res.ok) {
+      alert('Lỗi lưu hàng loạt. Vui lòng thử lại.');
+      return;
+    }
+
+    changedRows.forEach(code => {
+      attendanceData[code].is_manual = true;
+      const btn = document.getElementById(`save-btn-${code}`);
+      if (btn) { btn.className = 'btn btn-sm btn-success'; btn.innerHTML = '<i class="bi bi-check-lg"></i>'; }
+    });
+    changedRows.clear();
+    updateSummary();
+
+    const saveBtn = document.getElementById('save-all-btn');
+    saveBtn.innerHTML = '<i class="bi bi-check-all me-1"></i>Đã lưu tất cả';
+    setTimeout(() => { saveBtn.innerHTML = '<i class="bi bi-save me-1"></i>Lưu tất cả'; }, 2000);
+
+  } catch (e) {
+    alert('Lỗi lưu hàng loạt. Vui lòng thử lại.');
+  }
+}
+
+// ── Hủy thay đổi ──────────────────────────────────────
+function resetChanges() {
+  changedRows.clear();
+  openClassDetail(
+    currentScheduleId,
+    document.getElementById('modalTitle').innerText,
+    document.getElementById('modalClass').innerText.replace('Lớp: ', '')
+  );
+}
+</script>
+</body>
+</html>

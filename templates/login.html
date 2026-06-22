@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chào mừng</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    /* =========================
+       Global Styles
+       ========================= */
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+
+
+    body {
+      font-family: 'Be Vietnam Pro', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #dbeafe 0%, #e0f2fe 40%, #f0fdf4 100%);
+      background-attachment: fixed;
+      margin: 0;
+      color: #1e293b;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: rgba(255,255,255,0.35);
+      z-index: -1;
+    }
+
+
+    /* Decorative blobs */
+    body::after {
+      content: '';
+      position: fixed;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(59,130,246,0.12), transparent 70%);
+      top: -150px;
+      left: -150px;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+
+    h5, h4, h3 { font-weight: 600; }
+
+
+    /* =========================
+       Welcome Panel
+       ========================= */
+    .welcome-panel {
+      width: 440px;
+      max-width: 95vw;
+      background: rgba(255, 255, 255, 0.93);
+      border-radius: 1.4rem;
+      padding: 2.5rem 2rem;
+      box-shadow: 0 8px 32px rgba(30,41,100,0.13), 0 1.5px 4px rgba(30,41,100,0.06);
+      animation: panelIn 0.5s cubic-bezier(.22,1,.36,1) both;
+    }
+
+
+    @keyframes panelIn {
+      from { opacity: 0; transform: translateY(24px) scale(0.98); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+
+    /* =========================
+       Logo / Brand Header
+       ========================= */
+    .brand-header {
+      text-align: center;
+      margin-bottom: 1.8rem;
+    }
+
+
+    .brand-logo {
+      width: 60px;
+      height: 60px;
+      border-radius: 1rem;
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 0.9rem;
+      box-shadow: 0 4px 14px rgba(37,99,235,0.28);
+    }
+
+
+    .brand-logo svg {
+      width: 32px;
+      height: 32px;
+      fill: white;
+    }
+
+
+    .brand-header h3 {
+      color: #0f172a;
+      font-size: 1.45rem;
+      margin-bottom: 0.2rem;
+      letter-spacing: -0.3px;
+    }
+
+
+    .brand-header p {
+      color: #64748b;
+      font-size: 0.88rem;
+      margin: 0;
+    }
+
+
+    /* =========================
+       Tab Switcher
+       ========================= */
+    .auth-tabs {
+      display: flex;
+      background: #f1f5f9;
+      border-radius: 0.75rem;
+      padding: 4px;
+      margin-bottom: 1.6rem;
+      gap: 4px;
+    }
+
+
+    .auth-tab {
+      flex: 1;
+      text-align: center;
+      padding: 0.5rem 0;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #64748b;
+      border-radius: 0.55rem;
+      cursor: pointer;
+      transition: all 0.22s ease;
+      user-select: none;
+    }
+
+
+    .auth-tab.active {
+      background: white;
+      color: #2563eb;
+      font-weight: 600;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+
+
+    /* =========================
+       Forms
+       ========================= */
+    .auth-form { display: none; animation: fadeIn 0.3s ease both; }
+    .auth-form.show { display: block; }
+
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+
+    .form-label {
+      font-weight: 500;
+      font-size: 0.85rem;
+      color: #374151;
+      margin-bottom: 0.35rem;
+    }
+
+
+    .form-control {
+      border: 1.5px solid #e2e8f0;
+      border-radius: 0.65rem;
+      padding: 0.6rem 0.85rem;
+      font-size: 0.9rem;
+      color: #1e293b;
+      background: #f8fafc;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+
+
+    .form-control:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.13);
+      background: white;
+      outline: none;
+    }
+
+
+    .form-control::placeholder { color: #a0aec0; }
+
+
+    .input-group .form-control { border-radius: 0.65rem !important; }
+
+
+    .password-toggle {
+      position: absolute;
+      right: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+      z-index: 5;
+      transition: color 0.15s;
+    }
+    .password-toggle:hover { color: #3b82f6; }
+
+
+    .input-wrap { position: relative; }
+
+
+    /* =========================
+       Progress Bar (password strength)
+       ========================= */
+    .progress {
+      background-color: #e2e8f0;
+      border-radius: 1rem;
+      height: 5px;
+    }
+
+
+    .progress-bar {
+      background: linear-gradient(90deg, #3b82f6, #2563eb);
+      font-weight: 600;
+      border-radius: 1rem;
+      transition: width 0.35s ease;
+    }
+
+
+    /* =========================
+       Buttons
+       ========================= */
+    .btn-primary-main {
+      width: 100%;
+      padding: 0.65rem;
+      border: none;
+      border-radius: 0.75rem;
+      background: linear-gradient(90deg, #3b82f6, #2563eb);
+      color: white;
+      font-weight: 600;
+      font-size: 0.95rem;
+      letter-spacing: 0.2px;
+      cursor: pointer;
+      transition: transform 0.18s, box-shadow 0.18s, filter 0.18s;
+      box-shadow: 0 4px 14px rgba(37,99,235,0.25);
+      margin-top: 0.4rem;
+    }
+
+
+    .btn-primary-main:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(37,99,235,0.32);
+      filter: brightness(1.05);
+    }
+
+
+    .btn-primary-main:active {
+      transform: translateY(0);
+      filter: brightness(0.97);
+    }
+
+
+    /* =========================
+       Divider
+       ========================= */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin: 1.2rem 0;
+      color: #94a3b8;
+      font-size: 0.8rem;
+    }
+
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e2e8f0;
+    }
+
+
+    /* =========================
+       Social / Alt login
+       ========================= */
+    .social-btn {
+      width: 100%;
+      padding: 0.55rem;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 0.7rem;
+      background: white;
+      color: #374151;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+
+    .social-btn:hover {
+      border-color: #3b82f6;
+      background: #f0f7ff;
+      box-shadow: 0 2px 8px rgba(59,130,246,0.1);
+    }
+
+
+    /* =========================
+       Footer links
+       ========================= */
+    .auth-footer {
+      text-align: center;
+      margin-top: 1.2rem;
+      font-size: 0.83rem;
+      color: #64748b;
+    }
+
+
+    .auth-footer a {
+      color: #2563eb;
+      text-decoration: none;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+
+    .auth-footer a:hover { text-decoration: underline; }
+
+
+    .form-check-input:checked {
+      background-color: #2563eb;
+      border-color: #2563eb;
+    }
+
+
+    .form-check-label { font-size: 0.83rem; color: #64748b; }
+
+
+    /* Strength label */
+    .strength-label {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 0.25rem;
+      min-height: 1rem;
+    }
+
+
+    /* =========================
+       Step Indicator
+       ========================= */
+    .reg-steps {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+    }
+
+
+    .reg-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+
+
+    .reg-step span {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #e2e8f0;
+      color: #94a3b8;
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.25s ease;
+    }
+
+
+    .reg-step small {
+      font-size: 0.68rem;
+      color: #94a3b8;
+      font-weight: 500;
+      transition: color 0.25s;
+    }
+
+
+    .reg-step.active span {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: white;
+      box-shadow: 0 2px 8px rgba(37,99,235,0.3);
+    }
+
+
+    .reg-step.active small { color: #2563eb; }
+
+
+    .reg-step.done span {
+      background: #22c55e;
+      color: white;
+    }
+
+
+    .reg-step.done small { color: #16a34a; }
+
+
+    .reg-step-line {
+      flex: 1;
+      height: 2px;
+      background: #e2e8f0;
+      min-width: 36px;
+      margin: 0 4px;
+      margin-bottom: 14px;
+      transition: background 0.3s;
+    }
+
+
+    .reg-step-line.done { background: #22c55e; }
+
+
+    /* Secondary button */
+    .btn-secondary-main {
+      padding: 0.65rem 1rem;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 0.75rem;
+      background: white;
+      color: #64748b;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: border-color 0.18s, background 0.18s;
+    }
+
+
+    .btn-secondary-main:hover {
+      border-color: #3b82f6;
+      background: #f0f7ff;
+      color: #2563eb;
+    }
+
+
+    /* =========================
+       Face Capture
+       ========================= */
+    .face-capture-box {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+
+    .camera-frame {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4/3;
+      background: #0f172a;
+      border-radius: 1rem;
+      overflow: hidden;
+      border: 2px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+
+    #face-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transform: scaleX(-1); /* mirror */
+    }
+
+
+    .face-guide {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+
+    .face-oval {
+      width: 140px;
+      height: 180px;
+      border: 3px dashed rgba(59,130,246,0.7);
+      border-radius: 50%;
+      box-shadow: 0 0 0 2000px rgba(0,0,0,0.25);
+      animation: pulse-oval 2s ease-in-out infinite;
+    }
+
+
+    @keyframes pulse-oval {
+      0%, 100% { border-color: rgba(59,130,246,0.7); }
+      50%       { border-color: rgba(34,197,94,0.9); }
+    }
+
+
+    .face-oval.capturing {
+      border-color: rgba(34,197,94,0.9);
+      animation: none;
+    }
+
+
+    .face-hint {
+      margin-top: 10px;
+      background: rgba(0,0,0,0.55);
+      color: white;
+      font-size: 0.75rem;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-weight: 500;
+    }
+
+
+    .camera-flash {
+      position: absolute;
+      inset: 0;
+      background: white;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.05s;
+    }
+
+
+    .camera-flash.flash { opacity: 0.7; }
+
+
+    /* Camera placeholder when off */
+    .camera-frame.off-state {
+      background: #1e293b;
+    }
+
+
+    .camera-frame.off-state::after {
+      content: '📷';
+      font-size: 3rem;
+      opacity: 0.3;
+    }
+
+
+    .capture-status-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+
+    .capture-count {
+      text-align: center;
+      min-width: 48px;
+    }
+
+
+    .capture-count span {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #2563eb;
+      line-height: 1;
+      display: block;
+    }
+
+
+    .capture-count small {
+      font-size: 0.7rem;
+      color: #94a3b8;
+    }
+
+
+    .capture-status-text {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 4px;
+    }
+
+
+    .btn-capture {
+      padding: 0.55rem 0.9rem;
+      border: none;
+      border-radius: 0.7rem;
+      background: linear-gradient(90deg, #f59e0b, #d97706);
+      color: white;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: filter 0.18s, transform 0.18s;
+      white-space: nowrap;
+    }
+
+
+    .btn-capture:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
+    .btn-capture:disabled { opacity: 0.45; cursor: not-allowed; }
+
+
+    .btn-skip-face {
+      flex: 1;
+      padding: 0.55rem;
+      border: 1.5px dashed #cbd5e1;
+      border-radius: 0.7rem;
+      background: transparent;
+      color: #94a3b8;
+      font-size: 0.83rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color 0.18s, color 0.18s;
+      text-align: center;
+    }
+
+
+    .btn-skip-face:hover { border-color: #3b82f6; color: #2563eb; }
+
+
+    /* =========================
+       Responsive
+       ========================= */
+    @media (max-width: 768px) {
+      body { padding: 1rem; }
+      .welcome-panel { width: 100%; max-width: 480px; padding: 2rem 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+
+
+<div class="welcome-panel">
+
+
+  <!-- Brand Header -->
+  <div class="brand-header">
+    <div class="brand-logo">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+      </svg>
+    </div>
+    <h3>Chào mừng trở lại!</h3>
+    <p>Đăng nhập hoặc tạo tài khoản mới để tiếp tục</p>
+  </div>
+
+
+  <!-- Tab Switcher -->
+  <div class="auth-tabs">
+    <div class="auth-tab active" id="tab-login" onclick="switchTab('login')">Đăng nhập</div>
+    <div class="auth-tab" id="tab-register" onclick="switchTab('register')">Đăng ký</div>
+  </div>
+
+
+  <!-- =====================
+       LOGIN FORM
+       ===================== -->
+       {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+  <div class="auth-form show" id="form-login">
+    <div class="mb-3">
+      <label class="form-label">Email</label>
+      <input type="email" class="form-control" placeholder="ten@email.com"/>
+    </div>
+
+
+    <div class="mb-2">
+      <label class="form-label">Mật khẩu</label>
+      <div class="input-wrap">
+        <input type="password" class="form-control" id="login-password" placeholder="Nhập mật khẩu"/>
+        <button class="password-toggle" onclick="togglePassword('login-password', this)" tabindex="-1">
+          <svg id="eye-login" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+
+    <div class="d-flex justify-content-between align-items-center mb-3 mt-1">
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="remember">
+        <label class="form-check-label" for="remember">Ghi nhớ tôi</label>
+      </div>
+      <a href="#" class="form-check-label" style="color:#2563eb;font-weight:500;font-size:0.83rem;">Quên mật khẩu?</a>
+    </div>
+
+
+    <button class="btn-primary-main" onclick="handleLogin()">Đăng nhập</button>
+
+
+    <div class="divider">hoặc</div>
+
+    <div class="auth-footer">
+      Chưa có tài khoản? <a onclick="switchTab('register')">Đăng ký ngay</a>
+    </div>
+  </div>
+
+
+  <!-- =====================
+       REGISTER FORM (students table)
+       ===================== -->
+  <div class="auth-form" id="form-register">
+
+
+    <!-- Step indicator -->
+    <div class="reg-steps mb-3">
+      <div class="reg-step active" id="step-dot-1">
+        <span>1</span><small>Thông tin</small>
+      </div>
+      <div class="reg-step-line" id="line-1"></div>
+      <div class="reg-step" id="step-dot-2">
+        <span>2</span><small>Tài khoản</small>
+      </div>
+      <div class="reg-step-line" id="line-2"></div>
+      <div class="reg-step" id="step-dot-3">
+        <span>3</span><small>Khuôn mặt</small>
+      </div>
+      <div class="reg-step-line" id="line-3"></div>
+      <div class="reg-step" id="step-dot-4">
+        <span>4</span><small>Hoàn tất</small>
+      </div>
+    </div>
+
+
+    <!-- STEP 1: Student info -->
+    <div id="reg-step-1">
+      <div class="row g-2 mb-2">
+        <div class="col-12">
+          <label class="form-label">Họ và tên <span style="color:#ef4444">*</span></label>
+          <input type="text" class="form-control" id="reg-name" name="name" placeholder="Nguyễn Văn A" required/>
+        </div>
+      </div>
+      <div class="row g-2 mb-2">
+        <div class="col-6">
+          <label class="form-label">Mã sinh viên <span style="color:#ef4444">*</span></label>
+          <input type="text" class="form-control" id="reg-student-code" name="student_code" placeholder="SV2024001" required/>
+        </div>
+        <div class="col-6">
+          <label class="form-label">Lớp <span style="color:#ef4444">*</span></label>
+          <input type="text" class="form-control" id="reg-class" name="class_name" placeholder="CNTT01" required/>
+        </div>
+      </div>
+      <div class="row g-2 mb-2">
+        <div class="col-6">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-control" id="reg-email" name="email" placeholder="ten@email.com"/>
+        </div>
+        <div class="col-6">
+          <label class="form-label">Số điện thoại</label>
+          <input type="tel" class="form-control" id="reg-phone" name="phone" placeholder="0901234567"/>
+        </div>
+      </div>
+      <button class="btn-primary-main mt-2" onclick="goStep(2)">Tiếp theo →</button>
+    </div>
+
+
+    <!-- STEP 2: Account info -->
+    <div id="reg-step-2" style="display:none">
+      <div class="mb-2">
+        <label class="form-label">Mật khẩu <span style="color:#ef4444">*</span></label>
+        <div class="input-wrap">
+          <input type="password" class="form-control" id="reg-password" placeholder="Tạo mật khẩu (tối thiểu 8 ký tự)" oninput="checkStrength(this.value)"/>
+          <button class="password-toggle" onclick="togglePassword('reg-password', this)" tabindex="-1">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+        <div class="progress mt-2" style="height:5px;">
+          <div class="progress-bar" id="strength-bar" style="width:0%"></div>
+        </div>
+        <div class="strength-label" id="strength-label"></div>
+      </div>
+
+
+      <div class="mb-3">
+        <label class="form-label">Xác nhận mật khẩu <span style="color:#ef4444">*</span></label>
+        <div class="input-wrap">
+          <input type="password" class="form-control" id="reg-confirm" placeholder="Nhập lại mật khẩu"/>
+          <button class="password-toggle" onclick="togglePassword('reg-confirm', this)" tabindex="-1">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+        <div class="strength-label" id="confirm-label"></div>
+      </div>
+
+
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" id="agree">
+        <label class="form-check-label" for="agree">
+          Tôi đồng ý với <a href="#" style="color:#2563eb;">điều khoản dịch vụ</a> và <a href="#" style="color:#2563eb;">chính sách bảo mật</a>
+        </label>
+      </div>
+
+
+      <div class="d-flex gap-2">
+        <button class="btn-secondary-main" onclick="goStep(1)">← Quay lại</button>
+        <button class="btn-primary-main" style="flex:1" onclick="handleRegister()">Tiếp theo →</button>
+      </div>
+    </div>
+
+
+    <!-- STEP 3: Face Capture -->
+    <div id="reg-step-3" style="display:none">
+      <div class="face-capture-box">
+        <!-- Camera viewport -->
+        <div class="camera-frame" id="camera-frame">
+          <video id="face-video" autoplay muted playsinline></video>
+          <canvas id="face-canvas" style="display:none"></canvas>
+          <!-- Face guide overlay -->
+          <div class="face-guide">
+            <div class="face-oval" id="face-oval"></div>  
+            <span class="face-hint" id="face-hint">Căn khuôn mặt vào khung</span>
+          </div>
+          <!-- Flash effect -->
+          <div class="camera-flash" id="camera-flash"></div>
+        </div>
+
+
+        <!-- Status row -->
+        <div class="capture-status-row">
+          <div class="capture-count">
+            <span id="capture-count">0</span>
+            <small>/ 50 ảnh</small>
+          </div>
+          <div style="flex:1">
+            <div class="progress" style="height:8px;">
+              <div class="progress-bar" id="face-progress-bar" style="width:0%"></div>
+            </div>
+            <div class="capture-status-text" id="capture-status-text">Nhấn "Bắt đầu chụp" để tiến hành</div>
+          </div>
+        </div>
+
+
+        <!-- Buttons -->
+        <div class="d-flex gap-2 mt-2">
+          <button class="btn-secondary-main" id="btn-start-cam" onclick="startCamera()">
+            📷 Mở camera
+          </button>
+          <button class="btn-capture" id="btn-start-capture" onclick="startCapture()" disabled>
+            ▶ Bắt đầu chụp (50)
+          </button>
+         
+        </div>
+      </div>
+
+
+      <div class="d-flex gap-2 mt-3">
+        <button class="btn-secondary-main" onclick="stopCamera(); goStep(2)">← Quay lại</button>
+        <button class="btn-skip-face" onclick="stopCamera(); goStep(4)">Bỏ qua bước này</button>
+      </div>
+    </div>
+
+
+    <!-- STEP 4: Success -->
+    <div id="reg-step-4" style="display:none; text-align:center; padding: 1rem 0;">
+      <div style="font-size:3rem; margin-bottom:0.7rem;">🎉</div>
+      <h5 style="color:#16a34a; margin-bottom:0.4rem;">Đăng ký thành công!</h5>
+      <p style="color:#64748b; font-size:0.88rem; margin-bottom:1.2rem;">Tài khoản và dữ liệu khuôn mặt đã được lưu. Hãy đăng nhập để tiếp tục.</p>
+      <button class="btn-primary-main" style="width:auto;padding:0.55rem 2rem;" onclick="switchTab('login')">Đăng nhập ngay</button>
+    </div>
+
+
+    <div class="auth-footer" id="reg-footer">
+      Đã có tài khoản? <a onclick="switchTab('login')">Đăng nhập</a>
+    </div>
+  </div>
+
+
+</div>
+
+
+<script>
+  const TOTAL_STEPS = 4;
+  const TOTAL_CAPTURES = 50;
+  let captureCount = 0;
+  let captureInterval = null;
+  let cameraStream = null;
+  let capturedImages = [];   // mảng blob ảnh thật từ canvas.toBlob
+  let student_id = null;     // nhận từ server sau khi POST /add_student
+
+
+  /* ---- Tab switching ---- */
+  function switchTab(tab) {
+    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('show'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    document.getElementById('form-' + tab).classList.add('show');
+    if (tab === 'register') goStep(1, true);
+    if (tab === 'login') stopCamera();
+  }
+
+
+  /* ---- Step navigation ---- */
+  function goStep(n, silent) {
+    if (n === 2 && !silent) {
+      const name = document.getElementById('reg-name').value.trim();
+      const code = document.getElementById('reg-student-code').value.trim();
+      const cls  = document.getElementById('reg-class').value.trim();
+      if (!name || !code || !cls) {
+        ['reg-name','reg-student-code','reg-class'].forEach(id => {
+          const el = document.getElementById(id);
+          el.style.borderColor = !el.value.trim() ? '#ef4444' : '';
+        });
+        return;
+      }
+    }
+
+
+    // hide all steps
+    for (let i = 1; i <= TOTAL_STEPS; i++) {
+      const el = document.getElementById('reg-step-' + i);
+      if (el) el.style.display = 'none';
+    }
+    const target = document.getElementById('reg-step-' + n);
+    if (target) { target.style.display = 'block'; target.style.animation = 'fadeIn 0.28s ease both'; }
+
+
+    // update dots
+    for (let i = 1; i <= TOTAL_STEPS; i++) {
+      const dot = document.getElementById('step-dot-' + i);
+      if (!dot) continue;
+      dot.classList.remove('active','done');
+      if (i < n) dot.classList.add('done');
+      else if (i === n) dot.classList.add('active');
+    }
+
+
+    // update lines
+    for (let i = 1; i < TOTAL_STEPS; i++) {
+      const line = document.getElementById('line-' + i);
+      if (line) line.classList.toggle('done', i < n);
+    }
+
+
+    // footer visibility
+    const footer = document.getElementById('reg-footer');
+    if (footer) footer.style.display = n === TOTAL_STEPS ? 'none' : 'block';
+
+
+    // when entering face step — auto-open camera
+    if (n === 3) {
+      resetCapture();
+      setTimeout(startCamera, 300);
+    }
+
+    if (n === 4) {
+    const studentCode = document.getElementById('reg-student-code').value.trim();
+    console.log("Kích hoạt train tự động cho SV:", studentCode);
+    
+    // Gọi đúng route mới và thêm dấu / ở đầu
+    fetch('/train_model_auto') 
+    .then(response => {
+        if (response.status === 200 || response.status === 202) {
+            console.log("Server đã bắt đầu train ngầm thành công.");
+        } else {
+            console.error("Server trả về lỗi:", response.status);
+        }
+    })
+    .catch(err => {
+        console.error("Lỗi kết nối:", err);
+    });
+}
+
+    // leaving face step — stop camera
+    if (n !== 3) stopCamera();
+  }
+
+
+  /* ---- Camera ---- */
+  async function startCamera() {
+    const frame  = document.getElementById('camera-frame');
+    const video  = document.getElementById('face-video');
+    const btnCam = document.getElementById('btn-start-cam');
+
+
+    btnCam.disabled = true;
+    btnCam.textContent = '⏳ Đang mở...';
+
+
+    try {
+      cameraStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }
+      });
+      video.srcObject = cameraStream;
+
+
+      // Chờ metadata (width/height) load xong rồi mới play
+      await new Promise((resolve, reject) => {
+        video.onloadedmetadata = resolve;
+        video.onerror = reject;
+      });
+      await video.play();
+
+
+      frame.classList.remove('off-state');
+      btnCam.textContent = '✅ Camera đang bật';
+      document.getElementById('btn-start-capture').disabled = false;
+      document.getElementById('face-hint').textContent = 'Căn khuôn mặt vào khung rồi nhấn chụp';
+    } catch(e) {
+      document.getElementById('face-hint').textContent = '⚠ Không thể mở camera: ' + e.message;
+      btnCam.disabled = false;
+      btnCam.textContent = '🔄 Thử lại';
+    }
+  }
+
+
+  function stopCamera() {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(t => t.stop());
+      cameraStream = null;
+    }
+    clearInterval(captureInterval);
+    captureInterval = null;
+  }
+
+
+  function resetCapture() {
+    stopCamera();
+    captureCount = 0;
+    updateCaptureUI();
+    document.getElementById('btn-start-cam').disabled = false;
+    document.getElementById('btn-start-cam').textContent = '📷 Mở camera';
+    document.getElementById('btn-start-capture').disabled = true;
+    document.getElementById('btn-done-face').disabled = true;
+    document.getElementById('face-hint').textContent = 'Căn khuôn mặt vào khung';
+    document.getElementById('face-oval').classList.remove('capturing');
+    document.getElementById('camera-frame').classList.add('off-state');
+  }
+
+
+  /* ---- Real capture loop (canvas.toBlob) — giống camera_add_student.js ---- */
+ async function startCapture() {
+  if (!cameraStream) return;
+
+
+  const video   = document.getElementById('face-video');
+  const btn     = document.getElementById('btn-start-capture');
+  const btnBack = document.querySelector('#reg-step-3 .btn-secondary-main');
+  const btnSkip = document.querySelector('.btn-skip-face');
+  const oval    = document.querySelector('.face-oval'); // FIX
+
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Đang chụp...';
+
+
+  if (btnBack) btnBack.disabled = true;
+  if (btnSkip) btnSkip.disabled = true;
+
+
+  oval.classList.add('capturing');
+  document.getElementById('face-hint').textContent = 'Đang chụp... giữ nguyên khuôn mặt';
+
+
+  // ✅ CHỜ CAMERA READY ỔN ĐỊNH
+  await new Promise(resolve => {
+    const check = setInterval(() => {
+      if (video.videoWidth > 0) {
+        clearInterval(check);
+        resolve();
+      }
+    }, 100);
+  });
+
+
+  // canvas setup
+  const canvas = document.getElementById('face-canvas');
+  const ctx = canvas.getContext('2d');
+
+
+  canvas.width  = video.videoWidth;
+  canvas.height = video.videoHeight;
+
+
+  captureCount = 0;
+  capturedImages = [];
+
+
+  // =========================
+  // LOOP CHỤP 50 ẢNH
+  // =========================
+  while (captureCount < TOTAL_CAPTURES) {
+
+
+    ctx.save();
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    ctx.restore();
+
+
+    const blob = await new Promise(resolve => {
+      canvas.toBlob(resolve, 'image/jpeg', 0.9);
+    });
+
+
+    if (blob) {
+      capturedImages.push(blob);
+      captureCount++;
+
+
+      updateCaptureUI();
+      flashEffect();
+    }
+
+
+    await new Promise(r => setTimeout(r, 180)); // ổn định FPS
+  }
+
+
+  // =========================
+  // UPLOAD
+  // =========================
+ // =========================
+  // UPLOAD
+  // =========================
+  document.getElementById('face-hint').textContent = '📤 Đang upload ảnh...';
+
+  const form = new FormData();
+  form.append('student_id', student_id || 'demo');
+
+  capturedImages.forEach((b, i) => {
+    form.append('images[]', b, `img_${i}.jpg`);
+  });
+
+  try {
+    const resp = await fetch('/upload_face', {
+      method: 'POST',
+      body: form
+    });
+
+    if (resp.ok) {
+      document.getElementById('face-hint').textContent = '✅ Đã upload ảnh thành công!';
+    } if (resp.ok) {
+      // 1. Kích hoạt train ngầm
+      fetch('/train_model_auto'); 
+      
+      // 2. KHÓA CHẶT NÚT NGAY LẬP TỨC
+      btn.disabled = true; 
+      btn.style.opacity = "0.6"; // Làm mờ nút để biết đang bị khóa
+      btn.style.cursor = "not-allowed";
+      btn.textContent = '⌛ AI đang học (Vui lòng đợi)...';
+      document.getElementById('face-hint').textContent = '⚙️ Đang xử lý (0%)...';
+
+      // 3. Vòng lặp kiểm tra (Polling)
+      const checkStatus = setInterval(async () => {
+        try {
+          const sResp = await fetch('/train_status');
+          const sData = await sResp.json();
+
+          if (sData.running) {
+            // Cập nhật tiến độ thật từ Python
+            document.getElementById('face-hint').textContent = `⚙️ (${sData.progress}%)`;
+            document.getElementById('face-progress-bar').style.width = sData.progress + '%';
+          } 
+          else if (sData.message === "Done" || sData.progress === 100) {
+            // CHỈ KHI NÀO XONG THẬT SỰ (Done) MỚI MỞ KHÓA
+            clearInterval(checkStatus); 
+
+            document.getElementById('face-hint').textContent = '✅ AI đã học xong thành công!';
+            document.getElementById('face-progress-bar').style.backgroundColor = '#10b981';
+            
+            // MỞ KHÓA NÚT XANH
+            btn.disabled = false;
+            btn.style.opacity = "1";
+            btn.style.cursor = "pointer";
+            btn.classList.remove('btn-capture'); 
+            btn.classList.add('btn-primary-main'); 
+            btn.textContent = '🎉 Hoàn tất & Đăng nhập';
+
+            btn.onclick = () => {
+              stopCamera();
+              window.location.href = "/login";
+            };
+          }
+        } catch (e) {
+          console.log("Đang kết nối lại server...");
+        }
+      }, 1500); // 1.5 giây hỏi 1 lần
+
+    } else {
+      document.getElementById('face-hint').textContent = '⚠ Lỗi upload!';
+    }
+
+  } catch (err) {
+    document.getElementById('face-hint').textContent = '❌ Lỗi server: ' + err.message;
+  }
+
+ 
+
+  btn.onclick = () => {
+    stopCamera();
+    window.location.href = "/login";
+  };
+}
+  function flashEffect() {
+    const flash = document.getElementById('camera-flash');
+    flash.classList.add('flash');
+    setTimeout(() => flash.classList.remove('flash'), 60);
+  }
+
+
+  function updateCaptureUI() {
+    const pct = Math.round((captureCount / TOTAL_CAPTURES) * 100);
+    document.getElementById('capture-count').textContent = captureCount;
+    document.getElementById('face-progress-bar').style.width = pct + '%';
+    document.getElementById('capture-status-text').textContent =
+      captureCount < TOTAL_CAPTURES
+        ? `Đang chụp ${captureCount} / ${TOTAL_CAPTURES}...`
+        : `Đã chụp đủ ${TOTAL_CAPTURES} ảnh!`;
+  }
+
+
+  /* ---- Toggle password visibility ---- */
+  function togglePassword(id, btn) {
+    const inp = document.getElementById(id);
+    const isText = inp.type === 'text';
+    inp.type = isText ? 'password' : 'text';
+    btn.innerHTML = isText
+      ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`
+      : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+  }
+
+
+  /* ---- Password strength ---- */
+  function checkStrength(val) {
+    const bar = document.getElementById('strength-bar');
+    const label = document.getElementById('strength-label');
+    let score = 0;
+    if (val.length >= 8) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+    const levels = [
+      { w:'0%',   color:'#e2e8f0', text:'' },
+      { w:'25%',  color:'#ef4444', text:'Yếu' },
+      { w:'50%',  color:'#f97316', text:'Trung bình' },
+      { w:'75%',  color:'#eab308', text:'Khá tốt' },
+      { w:'100%', color:'#22c55e', text:'Mạnh' },
+    ];
+    const l = val.length === 0 ? levels[0] : (levels[score] || levels[1]);
+    bar.style.width = l.w; bar.style.background = l.color;
+    label.textContent = l.text; label.style.color = l.color;
+    const cf = document.getElementById('reg-confirm').value;
+    if (cf) checkConfirm(cf);
+  }
+
+
+  function checkConfirm(val) {
+    const pw = document.getElementById('reg-password').value;
+    const lbl = document.getElementById('confirm-label');
+    if (!val) { lbl.textContent = ''; return; }
+    if (val === pw) { lbl.textContent = '✓ Khớp'; lbl.style.color = '#22c55e'; }
+    else { lbl.textContent = '✗ Chưa khớp'; lbl.style.color = '#ef4444'; }
+  }
+
+
+  /* ---- Handlers ---- */
+async function handleLogin() {
+    // 1. Lấy dữ liệu từ input (Lưu ý: Nếu dùng username thì sửa querySelector cho đúng)
+    const usernameInput = document.querySelector('#form-login input[name="username"]') || 
+                          document.querySelector('#form-login input[type="text"]') ||
+                          document.querySelector('#form-login input[type="email"]');
+    
+    const username = usernameInput.value.trim();
+    const password = document.getElementById('login-password').value;
+
+    if (!username || !password) { 
+        alert('❌ Vui lòng nhập đầy đủ thông tin!'); 
+        return; 
+    }
+
+    const fd = new FormData();
+    fd.append('username', username);
+    fd.append('password', password);
+
+    try {
+        const res = await fetch('/login', { method: 'POST', body: fd });
+        
+        // Nếu Flask thực hiện redirect (res.redirected)
+        if (res.redirected) {
+            window.location.href = res.url;
+            return;
+        }
+
+        // Nếu không redirect, nghĩa là có lỗi (sai pass hoặc bị khóa)
+        const text = await res.text();
+        
+        // KIỂM TRA NỘI DUNG TRẢ VỀ ĐỂ HIỆN THÔNG BÁO TƯƠNG ỨNG
+        if (text.includes('bị khóa')) {
+            alert('🚫 Tài khoản của bạn đã bị khóa bởi quản trị viên!');
+        } else if (text.includes('không chính xác') || text.includes('Sai tài khoản')) {
+            alert('❌ Tên đăng nhập hoặc mật khẩu không chính xác!');
+        } else if (res.ok) {
+            window.location.href = '/dashboard';
+        } else {
+            alert('❌ Đã xảy ra lỗi không xác định.');
+        }
+
+    } catch (err) {
+        alert('❌ Không kết nối được server: ' + err.message);
+    }
+}
+
+  async function handleRegister() {
+    const pw = document.getElementById('reg-password').value;
+    const cf = document.getElementById('reg-confirm').value;
+    if (pw.length < 8) { alert('❌ Mật khẩu phải có ít nhất 8 ký tự!'); return; }
+    if (pw !== cf) {
+      document.getElementById('confirm-label').textContent = '✗ Chưa khớp';
+      document.getElementById('confirm-label').style.color = '#ef4444';
+      return;
+    }
+    if (!document.getElementById('agree').checked) { alert('❌ Vui lòng đồng ý với điều khoản!'); return; }
+
+
+    // POST thông tin sinh viên lên server — lấy student_id
+    const fd = new FormData();
+    fd.append('name',         document.getElementById('reg-name').value);
+    fd.append('student_code', document.getElementById('reg-student-code').value);
+    fd.append('class_name',   document.getElementById('reg-class').value);
+    fd.append('email',        document.getElementById('reg-email').value);
+    fd.append('phone',        document.getElementById('reg-phone').value);
+    fd.append('password',     pw);
+
+
+    try {
+      const res = await fetch('/register', { method: 'POST', body: fd });
+      if (res.ok) {
+        const j = await res.json();
+        student_id = j.student_id;
+      } else {
+        const j = await res.json().catch(() => ({}));
+        const msg = j.error || `Lỗi server (${res.status})`;
+        alert('❌ ' + msg);
+        return;   // dừng lại — không chuyển sang bước chụp ảnh
+      }
+    } catch (err) {
+      // offline / server chưa chạy — dùng id tạm để test UI
+      student_id = 'demo_' + Date.now();
+      console.warn('Không kết nối được server, dùng id tạm:', student_id);
+    }
+
+
+    goStep(3);
+  }
+
+
+  /* ---- Init ---- */
+  document.addEventListener('DOMContentLoaded', () => {
+    const cf = document.getElementById('reg-confirm');
+    if (cf) cf.addEventListener('input', () => checkConfirm(cf.value));
+    ['reg-name','reg-student-code','reg-class'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', () => el.style.borderColor = '');
+    });
+    // mark camera frame as off initially
+    const frame = document.getElementById('camera-frame');
+    if (frame) frame.classList.add('off-state');
+  });
+</script>
+
+
+</body>
+</html>
+
